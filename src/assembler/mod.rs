@@ -1,2 +1,2 @@
-mod parser;
 mod error;
+mod instructions;
