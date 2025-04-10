@@ -184,6 +184,7 @@ impl InstructionSet {
 
         // I-type Instructions (Load-related)
 
+        // Load Byte
         instructions.insert("lb", InstructionFormat {
             fmt: InstructionType::I,
             opcode: 0b0000011,
@@ -191,6 +192,7 @@ impl InstructionSet {
             funct7: None
         });
 
+        // Load Half
         instructions.insert("lh", InstructionFormat {
             fmt: InstructionType::I,
             opcode: 0b0000011,
@@ -198,6 +200,7 @@ impl InstructionSet {
             funct7: None
         });
 
+        // Load Word
         instructions.insert("lw", InstructionFormat {
             fmt: InstructionType::I,
             opcode: 0b0000011,
@@ -205,6 +208,7 @@ impl InstructionSet {
             funct7: None
         });
 
+        // Load Byte (Unsigned)
         instructions.insert("lbu", InstructionFormat {
             fmt: InstructionType::I,
             opcode: 0b0000011,
@@ -212,10 +216,37 @@ impl InstructionSet {
             funct7: None
         });
 
+        // Load Half (Unsigned)
         instructions.insert("lhu", InstructionFormat {
             fmt: InstructionType::I,
             opcode: 0b0000011,
             funct3: Some(0b101),
+            funct7: None
+        });
+
+        // S-type Instructions
+
+        // Store Byte
+        instructions.insert("sb", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0100011,
+            funct3: Some(0b000),
+            funct7: None
+        });
+
+        // Store Half
+        instructions.insert("sh", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0100011,
+            funct3: Some(0b001),
+            funct7: None
+        });
+
+        // Store Word
+        instructions.insert("sw", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0100011,
+            funct3: Some(0b010),
             funct7: None
         });
 
