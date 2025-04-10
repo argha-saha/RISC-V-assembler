@@ -98,6 +98,71 @@ impl InstructionSet {
             funct7: Some(0b0000000)
         });
 
+        // I-type Instructions
+
+        instructions.insert("addi", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b000),
+            funct7: None
+        });
+
+        instructions.insert("xori", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b100),
+            funct7: None
+        });
+
+        instructions.insert("ori", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b110),
+            funct7: None
+        });
+
+        instructions.insert("andi", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b111),
+            funct7: None
+        });
+
+        instructions.insert("slli", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b001),
+            funct7: Some(0b0000000)
+        });
+
+        instructions.insert("srli", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b101),
+            funct7: Some(0b0000000)
+        });
+
+        instructions.insert("srai", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b101),
+            funct7: Some(0b0100000)
+        });
+
+        instructions.insert("slti", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b010),
+            funct7: None
+        });
+
+        instructions.insert("sltiu", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0b011),
+            funct7: None
+        });
+
         Self { instructions }
     }
 
