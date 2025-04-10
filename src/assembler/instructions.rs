@@ -228,7 +228,7 @@ impl InstructionSet {
 
         // Store Byte
         instructions.insert("sb", InstructionFormat {
-            fmt: InstructionType::I,
+            fmt: InstructionType::S,
             opcode: 0b0100011,
             funct3: Some(0b000),
             funct7: None
@@ -236,7 +236,7 @@ impl InstructionSet {
 
         // Store Half
         instructions.insert("sh", InstructionFormat {
-            fmt: InstructionType::I,
+            fmt: InstructionType::S,
             opcode: 0b0100011,
             funct3: Some(0b001),
             funct7: None
@@ -244,9 +244,59 @@ impl InstructionSet {
 
         // Store Word
         instructions.insert("sw", InstructionFormat {
-            fmt: InstructionType::I,
+            fmt: InstructionType::S,
             opcode: 0b0100011,
             funct3: Some(0b010),
+            funct7: None
+        });
+
+        // B-type Instructions
+
+        // Branch ==
+        instructions.insert("beq", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b000),
+            funct7: None
+        });
+
+        // Branch !=
+        instructions.insert("bne", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b001),
+            funct7: None
+        });
+
+        // Branch <
+        instructions.insert("blt", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b100),
+            funct7: None
+        });
+
+        // Branch >=
+        instructions.insert("bge", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b101),
+            funct7: None
+        });
+
+        // Branch < (Unsigned)
+        instructions.insert("bltu", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b110),
+            funct7: None
+        });
+
+        // Branch >= (Unsigned)
+        instructions.insert("bgeu", InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b1100011,
+            funct3: Some(0b111),
             funct7: None
         });
 
