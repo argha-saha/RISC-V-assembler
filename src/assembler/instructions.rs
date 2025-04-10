@@ -300,6 +300,60 @@ impl InstructionSet {
             funct7: None
         });
 
+        // Jump Instructions
+
+        // Jump and Link
+        instructions.insert("jal", InstructionFormat {
+            fmt: InstructionType::J,
+            opcode: 0b1101111,
+            funct3: None,
+            funct7: None
+        });
+
+        // Jump and Link Reg
+        instructions.insert("jalr", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b1100111,
+            funct3: None,
+            funct7: None
+        });
+
+        // U-type Instructions
+
+        // Load Upper Immediate
+        instructions.insert("lui", InstructionFormat {
+            fmt: InstructionType::U,
+            opcode: 0b0110111,
+            funct3: None,
+            funct7: None
+        });
+
+        // Add Upper Immediate to PC
+        instructions.insert("auipc", InstructionFormat {
+            fmt: InstructionType::U,
+            opcode: 0b0010111,
+            funct3: None,
+            funct7: None
+        });
+
+        // Environment Instructions
+
+        // Environment Call
+        instructions.insert("ecall", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b1110011,
+            funct3: Some(0b000),
+            funct7: Some(0b0000000)
+        });
+
+        // Environment Break
+        instructions.insert("ebreak", InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b1110011,
+            funct3: Some(0b000),
+            funct7: Some(0b0000001)
+        });
+
         Self { instructions }
     }
 
