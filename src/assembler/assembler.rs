@@ -106,7 +106,7 @@ const ABI_NAMES: phf::Map<&'static str, u32> = phf::phf_map! {
 
 // Parse registers x0 to x31
 // ABI names should work as well (zero, ra, sp, gp, tp, t0-t6, s0-s11, a0-a7)
-fn parse_register(register: &str) -> Result<u32, AssemblerError> {
+pub fn parse_register(register: &str) -> Result<u32, AssemblerError> {
     let mut reg_name = register.to_ascii_lowercase();
 
     // Check if the register is an ABI name
