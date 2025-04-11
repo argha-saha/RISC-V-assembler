@@ -25,6 +25,8 @@ impl Parser {
 
         // "add x4, x5, x6" -> vec!["add", "x4", "x5", "x6"]
         let parts: Vec<&str> = line.split_whitespace().collect();
+        
+        // Holds the instruction and operands
         let mnemonic = parts[0];
         let operands = &parts[1..];
 
@@ -57,20 +59,73 @@ impl Parser {
         Ok(encode_r_type(
             fmt.opcode,
             rd,
-            fmt.funct3.unwrap(),
+            fmt.funct3.unwrap_or(0),
             rs1,
             rs2,
-            fmt.funct7.unwrap()
+            fmt.funct7.unwrap_or(0)
         ))
     }
 
     // TODO: Parse I-type instructions
 }
 
-fn parse_register(p0: &str) -> _ {
-    todo!()
+fn parse_register(register: &str) -> Result<u32, AssemblerError> {
+    
 }
 
-fn encode_r_type(p0: u32, p1: _, p2: u32, p3: _, p4: _, p5: u32) -> u32 {
-    todo!()
+// R-type Instruction Format
+// funct7 | rs2 | rs1 | funct3 | rd | opcode
+fn encode_r_type(opcode: u32, rd: u32, funct3: u32, rs1: u32, rs2: u32, funct7: u32) -> u32 {
+    (funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
+}
+
+// I-type Instruction Format
+// imm[11:0] | rs1 | funct3 | rd | opcode
+fn encode_i_type(opcode: u32, rd: u32, funct3: u32, rs1: u32, imm: i32) -> u32 {
+    let imm = (imm as u32) & 0xFFF;
+    (imm << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
+}
+
+// S-type Instruction Format
+// imm[11:5] | rs2 | rs1 | funct3 | imm[4:0] | opcode
+fn encode_s_type(opcode: u32, funct3: u32, rs1: u32, rs2: u32, imm: i32) -> u32 {
+    let imm = (imm as u32) & 0xFFF;
+
+    // Lower and upper segments of the immediate
+    let imm_lower = imm & 0x1F;
+    let imm_upper = (imm >> 5) & 0x7F;
+
+    (imm_upper << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (imm_lower << 7) | opcode
+}
+
+// B-type Instruction Format
+// imm[12|10:5] | rs2 | rs1 | funct3 | imm[4:1|11] | opcode
+fn encode_b_type(opcode: u32, funct3: u32, rs1: u32, rs2: u32, imm: i32) -> u32 {
+    let imm = (imm as u32) & 0x1FFF;
+
+    let imm_11 = (imm >> 11) & 0x1;
+    let imm_4_1 = (imm >> 1) & 0xF;
+    let imm_10_5 = (imm >> 5) & 0x3F;
+    let imm_12 = (imm >> 12) & 0x1;
+
+    (imm_12 << 31)
+        | (imm_10_5 << 25)
+        | (rs2 << 20)
+        | (rs1 << 15)
+        | (funct3 << 12)
+        | (imm_4_1 << 8)
+        | (imm_11 << 7)
+        | opcode
+}
+
+// U-type Instruction Format
+// imm[31:12] | rd | opcode
+fn encode_u_type() {
+
+}
+
+// J-type Instruction Format
+// imm[20|10:1|11|19:12] | rd | opcode
+fn encode_j_type() {
+
 }
