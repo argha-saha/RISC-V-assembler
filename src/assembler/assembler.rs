@@ -107,18 +107,21 @@ const ABI_NAMES: phf::Map<&'static str, u32> = phf::phf_map! {
 // Parse registers x0 to x31
 // ABI names should work as well (zero, ra, sp, gp, tp, t0-t6, s0-s11, a0-a7)
 fn parse_register(register: &str) -> Result<u32, AssemblerError> {
-    let reg = register.to_ascii_lowercase();
+    let mut reg_name = register.to_ascii_lowercase();
 
     // Check if the register is an ABI name
-    if let Some(&num) = ABI_NAMES.get(reg.as_str()) {
+    if let Some(&num) = ABI_NAMES.get(reg_name.as_str()) {
         return Ok(num);
     }
 
-    // Check if the register is x0 to x31
-    if let Some(num_str) = reg.strip_prefix('x') {
-        let num = num_str.parse::<u32>()
-            .map_err(|_| AssemblerError::InvalidOperand(format!("Invalid register: {}", register)))?;
+    // Check if the register is x0 to x31 or $0 to $31
+    if let Some(stripped) = reg_name.strip_prefix('x') {
+        reg_name = stripped.to_string();
+    } else if let Some(stripped) = reg_name.strip_prefix('$') {
+        reg_name = stripped.to_string();
+    }
 
+    if let Ok(num) = reg_name.parse::<u32>() {
         if num < 32 {
             Ok(num)
         } else {
