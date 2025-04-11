@@ -69,10 +69,64 @@ impl Parser {
     // TODO: Parse I-type instructions
 }
 
+const ABI_NAMES: phf::Map<&'static str, u32> = phf::phf_map! {
+    "zero" => 0,
+    "ra" => 1,
+    "sp" => 2,
+    "gp" => 3,
+    "tp" => 4,
+    "t0" => 5,
+    "t1" => 6,
+    "t2" => 7,
+    "s0" => 8,
+    "s1" => 9,
+    "a0" => 10,
+    "a1" => 11,
+    "a2" => 12,
+    "a3" => 13,
+    "a4" => 14,
+    "a5" => 15,
+    "a6" => 16,
+    "a7" => 17,
+    "s2" => 18,
+    "s3" => 19,
+    "s4" => 20,
+    "s5" => 21,
+    "s6" => 22,
+    "s7" => 23,
+    "s8" => 24,
+    "s9" => 25,
+    "s10" => 26,
+    "s11" => 27,
+    "t3" => 28,
+    "t4" => 29,
+    "t5" => 30,
+    "t6" => 31,
+};
+
 // Parse registers x0 to x31
 // ABI names should work as well (zero, ra, sp, gp, tp, t0-t6, s0-s11, a0-a7)
 fn parse_register(register: &str) -> Result<u32, AssemblerError> {
-    
+    let reg = register.to_ascii_lowercase();
+
+    // Check if the register is an ABI name
+    if let Some(&num) = ABI_NAMES.get(reg.as_str()) {
+        return Ok(num);
+    }
+
+    // Check if the register is x0 to x31
+    if let Some(num_str) = reg.strip_prefix('x') {
+        let num = num_str.parse::<u32>()
+            .map_err(|_| AssemblerError::InvalidOperand(format!("Invalid register: {}", register)))?;
+
+        if num < 32 {
+            Ok(num)
+        } else {
+            Err(AssemblerError::InvalidOperand(format!("Invalid register: {}", register)))
+        }
+    } else {
+        Err(AssemblerError::InvalidOperand(format!("Invalid register: {}", register)))
+    }
 }
 
 // R-type Instruction Format
@@ -124,7 +178,7 @@ pub fn encode_b_type(opcode: u32, funct3: u32, rs1: u32, rs2: u32, imm: i32) -> 
 // imm[31:12] | rd | opcode
 pub fn encode_u_type(opcode: u32, rd: u32, imm: i32) -> u32 {
     let imm = (imm as u32) & 0xFFFFF000;
-    (imm << 12) | (rd << 7) | opcode
+    imm | (rd << 7) | opcode
 }
 
 // J-type Instruction Format
@@ -138,9 +192,9 @@ pub fn encode_j_type(opcode: u32, rd: u32, imm: i32) -> u32 {
     let imm_20 = (imm >> 20) & 0x1;
 
     (imm_20 << 31)
-        | (imm_19_12 << 19)
-        | (imm_11 << 18)
-        | (imm_10_1 << 8)
+        | (imm_10_1 << 21)
+        | (imm_11 << 20)
+        | (imm_19_12 << 12)
         | (rd << 7)
         | opcode
 }
