@@ -27,4 +27,15 @@ mod tests {
         let encoded = encode_i_type(opcode, rd, funct3, rs1, imm);
         assert_eq!(encoded, 0xACE28213);
     }
+
+    #[test]
+    fn test_encode_s_type() {
+        let opcode = 0b010_0011;
+        let funct3 = 0b000;
+        let rs1 = 5;
+        let rs2 = 6;
+        let imm = 0x111;
+        let encoded = encode_s_type(opcode, funct3, rs1, rs2, imm);
+        assert_eq!(encoded, 0x106288A3);
+    }
 }
