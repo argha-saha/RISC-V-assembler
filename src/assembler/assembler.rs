@@ -120,12 +120,25 @@ fn encode_b_type(opcode: u32, funct3: u32, rs1: u32, rs2: u32, imm: i32) -> u32 
 
 // U-type Instruction Format
 // imm[31:12] | rd | opcode
-fn encode_u_type() {
-
+fn encode_u_type(opcode: u32, rd: u32, imm: i32) -> u32 {
+    let imm = (imm as u32) & 0xFFFFF000;
+    (imm << 12) | (rd << 7) | opcode
 }
 
 // J-type Instruction Format
 // imm[20|10:1|11|19:12] | rd | opcode
-fn encode_j_type() {
+fn encode_j_type(opcode: u32, rd: u32, imm: i32) -> u32 {
+    let imm = (imm as u32) & 0x1FFFFF;
 
+    let imm_19_12 = (imm >> 12) & 0xFF;
+    let imm_11 = (imm >> 11) & 0x1;
+    let imm_10_1 = (imm >> 1) & 0x3FF;
+    let imm_20 = (imm >> 20) & 0x1;
+
+    (imm_20 << 31)
+        | (imm_19_12 << 19)
+        | (imm_11 << 18)
+        | (imm_10_1 << 8)
+        | (rd << 7)
+        | opcode
 }
