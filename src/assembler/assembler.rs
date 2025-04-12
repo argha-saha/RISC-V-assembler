@@ -169,6 +169,39 @@ pub fn parse_immediate(imm: &str) -> Result<i32, AssemblerError> {
     Ok(value)
 }
 
+pub fn parse_offset(offset: &str) -> Result<(i32, u32), AssemblerError> {
+    let mut parts = offset.split('(');
+
+    let imm_str = parts.next()
+        .ok_or_else(|| AssemblerError::InvalidOperand(format!("Invalid immediate: {}", offset)))?;
+    let mut rs1_str = parts.next()
+        .ok_or_else(|| AssemblerError::InvalidOperand(format!("Invalid register: {}", offset)))?;
+
+    if parts.next().is_some() {
+        return Err(AssemblerError::ParseError(format!(
+            "Invalid offset format: {}",
+            offset
+        )));
+    }
+
+    rs1_str = rs1_str.strip_suffix(')').ok_or_else(|| {
+        AssemblerError::ParseError(format!("Invalid offset format: {}", offset))
+    })?;
+
+    let imm = parse_immediate(imm_str)?;
+    let rs1 = parse_register(rs1_str)?;
+
+    // x0 is hardwired to 0 so it's immutable
+    if rs1 == 0 {
+        return Err(AssemblerError::InvalidOperand(format!(
+            "Invalid register: {}",
+            rs1
+        )));
+    }
+
+    Ok((imm, rs1))
+}
+
 // R-type Instruction Format
 // funct7 | rs2 | rs1 | funct3 | rd | opcode
 pub fn encode_r_type(opcode: u32, rd: u32, funct3: u32, rs1: u32, rs2: u32, funct7: u32) -> u32 {
