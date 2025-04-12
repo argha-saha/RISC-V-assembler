@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use riscv_assembler::assembler::assembler::{
+    use riscv_assembler::assembler::encoder::{
         encode_r_type, encode_i_type, encode_s_type, 
         encode_b_type, encode_u_type, encode_j_type,
     };
