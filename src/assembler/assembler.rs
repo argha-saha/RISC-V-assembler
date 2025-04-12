@@ -132,6 +132,43 @@ pub fn parse_register(register: &str) -> Result<u32, AssemblerError> {
     }
 }
 
+pub fn parse_immediate(imm: &str) -> Result<i32, AssemblerError> {
+    let imm_str = imm.replace('_', "");
+
+    // Determine the radix
+    let (num_str, radix) = if let Some(hex) = imm.strip_prefix("0x") {
+        (hex, 16)
+    } else if let Some(bin) = imm.strip_prefix("0b") {
+        (bin, 2)
+    } else if let Some(oct) = imm.strip_prefix("0o") {
+        (oct, 8)
+    } else {
+        (imm_str.as_str(), 10)
+    };
+
+    // Check for negative numbers
+    let negative = num_str.starts_with('-');
+    let abs_num_str = if negative {
+        // Remove the negative sign for parsing
+        &num_str[1..]
+    } else {
+        num_str
+    };
+
+    let abs_value = i32::from_str_radix(abs_num_str, radix)
+        .map_err(|e| AssemblerError::InvalidOperand(
+            format!("Invalid immediate {}: {}", imm, e)
+        ))?;
+
+    let value = if negative {
+        -(abs_value as i32)
+    } else {
+        abs_value as i32
+    };
+
+    Ok(value)
+}
+
 // R-type Instruction Format
 // funct7 | rs2 | rs1 | funct3 | rd | opcode
 pub fn encode_r_type(opcode: u32, rd: u32, funct3: u32, rs1: u32, rs2: u32, funct7: u32) -> u32 {
