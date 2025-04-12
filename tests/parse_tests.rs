@@ -8,6 +8,10 @@ mod tests {
         assert_eq!(parse_immediate("0x0"), Ok(0));
         assert_eq!(parse_immediate("0xACE"), Ok(0xACE));
         assert_eq!(parse_immediate("-0xF"), Ok(-15));
+        assert_eq!(parse_immediate("0xFFFFFFFF"), Ok(-1));
+
+        // Valid decimal
+        assert_eq!(parse_immediate("0"), Ok(0));
     }
 
     #[test]

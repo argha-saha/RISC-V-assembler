@@ -182,7 +182,7 @@ impl Parser {
     }
 }
 
-const ABI_NAMES: phf::Map<&'static str, u32> = phf::phf_map! {
+const ABI_NAME_REGISTERS: phf::Map<&'static str, u32> = phf::phf_map! {
     "zero" => 0,
     "ra" => 1,
     "sp" => 2,
@@ -223,7 +223,7 @@ pub fn parse_register(register: &str) -> Result<u32, AssemblerError> {
     let mut reg_name = register.to_ascii_lowercase();
 
     // Check if the register is an ABI name
-    if let Some(&num) = ABI_NAMES.get(reg_name.as_str()) {
+    if let Some(&num) = ABI_NAME_REGISTERS.get(reg_name.as_str()) {
         return Ok(num);
     }
 
@@ -268,17 +268,32 @@ pub fn parse_immediate(imm: &str) -> Result<i32, AssemblerError> {
         (unsigned_imm_str, 10)
     };
 
-    // Parse the number
-    let value = i32::from_str_radix(num_str, radix).map_err(|e| {
-        AssemblerError::InvalidOperand(format!("Invalid immediate {}: {}", imm, e))
-    })?;
+    // Parse the immediate
+    let parsed_imm = if radix == 10 {
+        // Decimal
+        let value = i32::from_str_radix(num_str, 10).map_err(|e| {
+            AssemblerError::InvalidOperand(format!("Invalid immediate: {}", e))
+        })?;
 
-    // Restore the sign
-    if negative {
-        Ok(-value)
+        // Restore the sign
+        if negative {
+            -value
+        } else {
+            value
+        }
     } else {
-        Ok(value)
-    }
+        let value = u32::from_str_radix(num_str, radix).map_err(|e| {
+            AssemblerError::InvalidOperand(format!("Invalid immediate: {}", e))
+        })? as i32;
+
+        if negative {
+            -value
+        } else {
+            value
+        }
+    };
+
+    Ok(parsed_imm)
 }
 
 pub fn parse_offset(offset: &str) -> Result<(i32, u32), AssemblerError> {
