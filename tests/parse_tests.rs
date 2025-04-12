@@ -10,8 +10,20 @@ mod tests {
         assert_eq!(parse_immediate("-0xF"), Ok(-15));
         assert_eq!(parse_immediate("0xFFFFFFFF"), Ok(-1));
 
+        // Valid binary
+        assert_eq!(parse_immediate("0b0"), Ok(0));
+        assert_eq!(parse_immediate("0b1100"), Ok(12));
+        assert_eq!(parse_immediate("-0b0100_0000"), Ok(-64));
+
+        // Valid octal
+        assert_eq!(parse_immediate("0o0"), Ok(0));
+        assert_eq!(parse_immediate("0o123"), Ok(83));
+        assert_eq!(parse_immediate("-0o1000"), Ok(-512));
+
         // Valid decimal
         assert_eq!(parse_immediate("0"), Ok(0));
+        assert_eq!(parse_immediate("64"), Ok(64));
+        assert_eq!(parse_immediate("-64"), Ok(-64));
     }
 
     #[test]
