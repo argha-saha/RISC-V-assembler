@@ -1,9 +1,7 @@
 use std::fmt;
-use std::io::Error;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AssemblerError {
-    IOError(Error),
     ParseError(String),
     InvalidInstruction(String),
     InvalidOperand(String)
@@ -12,7 +10,6 @@ pub enum AssemblerError {
 impl fmt::Display for AssemblerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::IOError(e) => write!(f, "IO Error: {}", e),
             Self::ParseError(e) => write!(f, "Parser Error: {}", e),
             Self::InvalidInstruction(e) => write!(f, "Invalid Instruction: {}", e),
             Self::InvalidOperand(e) => write!(f, "Invalid Operand: {}", e)

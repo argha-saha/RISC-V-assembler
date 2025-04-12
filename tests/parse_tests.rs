@@ -1,6 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use riscv_assembler::assembler::assembler::parse_register;
+    use riscv_assembler::assembler::assembler::{parse_register, parse_immediate};
+
+    #[test]
+    fn test_parse_immediate() {
+        // Valid hexadecimal
+        assert_eq!(parse_immediate("0x0"), Ok(0));
+        assert_eq!(parse_immediate("0xACE"), Ok(0xACE));
+        assert_eq!(parse_immediate("-0xF"), Ok(-15));
+    }
 
     #[test]
     fn test_regular_names() {

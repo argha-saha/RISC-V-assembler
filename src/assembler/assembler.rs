@@ -246,40 +246,39 @@ pub fn parse_register(register: &str) -> Result<u32, AssemblerError> {
 }
 
 pub fn parse_immediate(imm: &str) -> Result<i32, AssemblerError> {
+    // Remove underscores (0xFFFF_FFFF -> 0xFFFFFFFF)
     let imm_str = imm.replace('_', "");
 
+    // Check for negative
+    let negative = imm_str.starts_with('-');
+    let unsigned_imm_str = if negative {
+        &imm_str[1..]
+    } else {
+        &imm_str
+    };
+
     // Determine the radix
-    let (num_str, radix) = if let Some(hex) = imm.strip_prefix("0x") {
+    let (num_str, radix) = if let Some(hex) = unsigned_imm_str.strip_prefix("0x") {
         (hex, 16)
-    } else if let Some(bin) = imm.strip_prefix("0b") {
+    } else if let Some(bin) = unsigned_imm_str.strip_prefix("0b") {
         (bin, 2)
-    } else if let Some(oct) = imm.strip_prefix("0o") {
+    } else if let Some(oct) = unsigned_imm_str.strip_prefix("0o") {
         (oct, 8)
     } else {
-        (imm_str.as_str(), 10)
+        (unsigned_imm_str, 10)
     };
 
-    // Check for negative numbers
-    let negative = num_str.starts_with('-');
-    let abs_num_str = if negative {
-        // Remove the negative sign for parsing
-        &num_str[1..]
+    // Parse the number
+    let value = i32::from_str_radix(num_str, radix).map_err(|e| {
+        AssemblerError::InvalidOperand(format!("Invalid immediate {}: {}", imm, e))
+    })?;
+
+    // Restore the sign
+    if negative {
+        Ok(-value)
     } else {
-        num_str
-    };
-
-    let abs_value = i32::from_str_radix(abs_num_str, radix)
-        .map_err(|e| AssemblerError::InvalidOperand(
-            format!("Invalid immediate {}: {}", imm, e)
-        ))?;
-
-    let value = if negative {
-        -(abs_value as i32)
-    } else {
-        abs_value as i32
-    };
-
-    Ok(value)
+        Ok(value)
+    }
 }
 
 pub fn parse_offset(offset: &str) -> Result<(i32, u32), AssemblerError> {
