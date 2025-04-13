@@ -25,6 +25,32 @@ impl Assembler {
         }
     }
 
+    pub fn assemble(&mut self, path: &str) -> Result<Vec<u8>, AssemblerError> {
+        // Collect labels on the first pass
+        let file = File::open(path)?;
+        self.collect_labels(file)?;
+
+        // Generate the machine code on the second pass
+        let file = File::open(path)?;
+        let mut output = Vec::new();
+        let mut current_address = 0;
+
+        for line in BufReader::new(file).lines() {
+            // Skip comments or extract the asm before a comment
+            let line = line?;
+            let line = line.splitn(2, '#').next().unwrap().trim();
+
+            // Skip blank lines
+            if line.is_empty() {
+                continue;
+            }
+        }
+
+        // TODO: Parsing logic
+
+        Ok(output)
+    }
+
     fn collect_labels(&mut self, file: File)  -> Result<(), AssemblerError> {
         let mut current_address = 0;
 
