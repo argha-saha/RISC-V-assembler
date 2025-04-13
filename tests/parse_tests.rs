@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use riscv_assembler::assembler::assembler::*;
+    use riscv_assembler::assembler::parser::*;
     use riscv_assembler::assembler::instructions::{InstructionType, InstructionFormat};
 
     #[test]
