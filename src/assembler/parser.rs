@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::assembler::error::AssemblerError;
 use crate::assembler::instructions::{InstructionFormat, InstructionSet, InstructionType};
 use crate::assembler::encoder::*;
@@ -13,7 +14,12 @@ impl Parser {
         }
     }
 
-    pub fn parse_line(&self, line: &str) -> Result<Option<u32>, AssemblerError> {
+    pub fn parse_line(
+        &self,
+        line: &str,
+        current_address: u32,
+        symbols: &HashMap<String, u32>
+    ) -> Result<Option<u32>, AssemblerError> {
         let line = line
             .split('#')
             .next()
@@ -40,11 +46,11 @@ impl Parser {
 
         match instr.fmt {
             InstructionType::R => Ok(Some(self.parse_r_type(&instr, operands)?)),
-            InstructionType::I => Ok(Some(self.parse_i_type(&instr, operands)?)),
-            InstructionType::S => Ok(Some(self.parse_s_type(&instr, operands)?)),
-            InstructionType::B => Ok(Some(self.parse_b_type(&instr, operands)?)),
-            InstructionType::U => Ok(Some(self.parse_u_type(&instr, operands)?)),
-            InstructionType::J => Ok(Some(self.parse_j_type(&instr, operands)?))
+            InstructionType::I => Ok(Some(self.parse_i_type(&instr, operands, symbols)?)),
+            InstructionType::S => Ok(Some(self.parse_s_type(&instr, operands, symbols)?)),
+            InstructionType::B => Ok(Some(self.parse_b_type(&instr, operands, current_address, symbols)?)),
+            InstructionType::U => Ok(Some(self.parse_u_type(&instr, operands, symbols)?)),
+            InstructionType::J => Ok(Some(self.parse_j_type(&instr, operands, current_address, symbols)?))
         }
     }
 
@@ -71,7 +77,12 @@ impl Parser {
         ))
     }
 
-    pub fn parse_i_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_i_type(
+        &self,
+        fmt: &InstructionFormat,
+        operands: &[&str],
+        symbols: &HashMap<String, u32>
+    ) -> Result<u32, AssemblerError> {
         let (rd, rs1, imm) = match operands.len() {
             // I-type load instructions
             2 => {
@@ -104,7 +115,12 @@ impl Parser {
         ))
     }
 
-    pub fn parse_s_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_s_type(
+        &self,
+        fmt: &InstructionFormat,
+        operands: &[&str],
+        symbols: &HashMap<String, u32>
+    ) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} for an s-type instruction",
@@ -124,7 +140,13 @@ impl Parser {
         ))
     }
 
-    pub fn parse_b_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_b_type(
+        &self,
+        fmt: &InstructionFormat,
+        operands: &[&str],
+        current_address: u32,
+        symbols: &HashMap<String, u32>
+    ) -> Result<u32, AssemblerError> {
         if operands.len() != 3 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 3 operands but received {} for a b-type instruction",
@@ -145,7 +167,12 @@ impl Parser {
         ))
     }
 
-    pub fn parse_u_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_u_type(
+        &self,
+        fmt: &InstructionFormat,
+        operands: &[&str],
+        symbols: &HashMap<String, u32>
+    ) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} for a u-type instruction",
@@ -163,7 +190,13 @@ impl Parser {
         ))
     }
 
-    pub fn parse_j_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_j_type(
+        &self,
+        fmt: &InstructionFormat,
+        operands: &[&str],
+        current_address: u32,
+        symbols: &HashMap<String, u32>
+    ) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} a j-type instruction",

@@ -44,9 +44,19 @@ impl Assembler {
             if line.is_empty() {
                 continue;
             }
-        }
 
-        // TODO: Parsing logic
+            // Parse using the address and symbol hashmap
+            match self.parser.parse_line(line, current_address, &self.symbols) {
+                Ok(Some(instruction)) => {
+                    output.extend_from_slice(&instruction.to_le_bytes());
+                    current_address += 4;
+                }
+
+                Ok(None) => {}
+
+                Err(e) => return Err(e)
+            }
+        }
 
         Ok(output)
     }
