@@ -86,6 +86,22 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_b_type() {
+        let parser = Parser::new();
+        let beq = InstructionFormat {
+            fmt: InstructionType::B,
+            opcode: 0b110_0011,
+            funct3: Some(0),
+            funct7: None
+        };
+
+        assert_eq!(
+            parser.parse_b_type(&beq, &["x5", "x6", "0x123"]),
+            Ok(0b0001_0010_0110_0010_1000_0001_0110_0011)
+        );
+    }
+
+    #[test]
     fn test_regular_names() {
         let mut reg_name = "x0";
         let mut reg_num = parse_register(reg_name).unwrap();
