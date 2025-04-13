@@ -2,7 +2,7 @@ use crate::assembler::error::AssemblerError;
 use crate::assembler::instructions::{InstructionFormat, InstructionSet, InstructionType};
 use crate::assembler::encoder::*;
 
-struct Parser {
+pub struct Parser {
     instructions: InstructionSet
 }
 
@@ -49,7 +49,7 @@ impl Parser {
     }
 
     // Parse R-type instructions
-    fn parse_r_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_r_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         if operands.len() != 3 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 3 operands but received {} for an r-type instruction",
@@ -71,7 +71,7 @@ impl Parser {
         ))
     }
 
-    fn parse_i_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_i_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         let (rd, rs1, imm) = match operands.len() {
             // I-type load instructions
             2 => {

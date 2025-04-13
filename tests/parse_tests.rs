@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use riscv_assembler::assembler::assembler::{parse_register, parse_immediate};
+    use riscv_assembler::assembler::assembler::*;
+    use riscv_assembler::assembler::instructions::{InstructionType, InstructionFormat};
 
     #[test]
     fn test_parse_immediate() {
@@ -24,6 +25,48 @@ mod tests {
         assert_eq!(parse_immediate("0"), Ok(0));
         assert_eq!(parse_immediate("64"), Ok(64));
         assert_eq!(parse_immediate("-64"), Ok(-64));
+    }
+
+    #[test]
+    fn test_parse_offset() {
+        assert_eq!(parse_offset("64(x4)"), Ok((64, 4)));
+        assert_eq!(parse_offset("-16(x8)"), Ok((-16, 8)));
+
+        // Invalid offsets
+        assert!(parse_offset("64(x4").is_err());
+        assert!(parse_offset("64x4)").is_err());
+    }
+
+    #[test]
+    fn test_parse_r_type() {
+        let parser = Parser::new();
+        let add = InstructionFormat {
+            fmt: InstructionType::R,
+            opcode: 0b0110011,
+            funct3: Some(0),
+            funct7: Some(0)
+        };
+
+        assert_eq!(
+            parser.parse_r_type(&add, &["x4", "x5", "x6"]),
+            Ok(0b0000_0000_0110_0010_1000_0010_0011_0011)
+        );
+    }
+
+    #[test]
+    fn test_parse_i_type() {
+        let parser = Parser::new();
+        let addi = InstructionFormat {
+            fmt: InstructionType::I,
+            opcode: 0b0010011,
+            funct3: Some(0),
+            funct7: None
+        };
+
+        assert_eq!(
+            parser.parse_i_type(&addi, &["x4", "x5", "16"]),
+            Ok(0b0000_0001_0000_0010_1000_0010_0001_0011)
+        );
     }
 
     #[test]
