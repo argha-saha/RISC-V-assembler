@@ -116,6 +116,21 @@ mod tests {
         )
     }
 
+    fn test_parse_j_type() {
+        let parser = Parser::new();
+        let jal = InstructionFormat {
+            fmt: InstructionType::J,
+            opcode: 0b110_1111,
+            funct3: None,
+            funct7: None
+        };
+
+        assert_eq!(
+            parser.parse_j_type(&jal, &["x4", "0x7FFFFFFF"]),
+            Ok(0b1111_1111_1111_1111_1111_0010_0110_1111)
+        )
+    }
+
     #[test]
     fn test_regular_names() {
         let mut reg_name = "x0";
