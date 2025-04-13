@@ -42,7 +42,7 @@ mod tests {
         let parser = Parser::new();
         let add = InstructionFormat {
             fmt: InstructionType::R,
-            opcode: 0b0110011,
+            opcode: 0b011_0011,
             funct3: Some(0),
             funct7: Some(0)
         };
@@ -58,7 +58,7 @@ mod tests {
         let parser = Parser::new();
         let addi = InstructionFormat {
             fmt: InstructionType::I,
-            opcode: 0b0010011,
+            opcode: 0b001_0011,
             funct3: Some(0),
             funct7: None
         };
@@ -74,7 +74,7 @@ mod tests {
         let parser = Parser::new();
         let lb = InstructionFormat {
             fmt: InstructionType::S,
-            opcode: 0b0100011,
+            opcode: 0b010_0011,
             funct3: Some(0),
             funct7: None
         };
@@ -99,6 +99,21 @@ mod tests {
             parser.parse_b_type(&beq, &["x5", "x6", "0x123"]),
             Ok(0b0001_0010_0110_0010_1000_0001_0110_0011)
         );
+    }
+
+    fn test_parse_u_type() {
+        let parser = Parser::new();
+        let lui = InstructionFormat {
+            fmt: InstructionType::U,
+            opcode: 0b011_0111,
+            funct3: None,
+            funct7: None
+        };
+
+        assert_eq!(
+            parser.parse_u_type(&lui, &["x4", "0x12345678"]),
+            Ok(0b0001_0010_0011_0100_0101_0010_0011_0111)
+        )
     }
 
     #[test]
