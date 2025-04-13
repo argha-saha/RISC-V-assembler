@@ -70,6 +70,22 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_s_type() {
+        let parser = Parser::new();
+        let lb = InstructionFormat {
+            fmt: InstructionType::S,
+            opcode: 0b0100011,
+            funct3: Some(0),
+            funct7: None
+        };
+
+        assert_eq!(
+            parser.parse_s_type(&lb, &["x6", "0x111(x5)"]),
+            Ok(0b0001_0000_0110_0010_1000_1000_1010_0011)
+        )
+    }
+
+    #[test]
     fn test_regular_names() {
         let mut reg_name = "x0";
         let mut reg_num = parse_register(reg_name).unwrap();

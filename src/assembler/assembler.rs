@@ -104,7 +104,7 @@ impl Parser {
         ))
     }
 
-    fn parse_s_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_s_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} for an s-type instruction",
@@ -124,7 +124,7 @@ impl Parser {
         ))
     }
 
-    fn parse_b_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_b_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         if operands.len() != 3 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 3 operands but received {} for a b-type instruction",
@@ -145,7 +145,7 @@ impl Parser {
         ))
     }
 
-    fn parse_u_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_u_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} for a u-type instruction",
@@ -163,7 +163,7 @@ impl Parser {
         ))
     }
 
-    fn parse_j_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_j_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands but received {} a j-type instruction",
