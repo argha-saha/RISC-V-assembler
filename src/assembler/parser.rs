@@ -46,8 +46,8 @@ impl Parser {
 
         match instr.fmt {
             InstructionType::R => Ok(Some(self.parse_r_type(&instr, operands)?)),
-            InstructionType::I => Ok(Some(self.parse_i_type(&instr, operands, symbols)?)),
-            InstructionType::S => Ok(Some(self.parse_s_type(&instr, operands, symbols)?)),
+            InstructionType::I => Ok(Some(self.parse_i_type(&instr, operands)?)),
+            InstructionType::S => Ok(Some(self.parse_s_type(&instr, operands)?)),
             InstructionType::B => Ok(Some(self.parse_b_type(&instr, operands, current_address, symbols)?)),
             InstructionType::U => Ok(Some(self.parse_u_type(&instr, operands, symbols)?)),
             InstructionType::J => Ok(Some(self.parse_j_type(&instr, operands, current_address, symbols)?))
@@ -55,7 +55,11 @@ impl Parser {
     }
 
     // Parse R-type instructions
-    pub fn parse_r_type(&self, fmt: &InstructionFormat, operands: &[&str]) -> Result<u32, AssemblerError> {
+    pub fn parse_r_type(
+        &self, 
+        fmt: &InstructionFormat, 
+        operands: &[&str]
+    ) -> Result<u32, AssemblerError> {
         if operands.len() != 3 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 3 operands but received {} for an r-type instruction",
@@ -81,7 +85,6 @@ impl Parser {
         &self,
         fmt: &InstructionFormat,
         operands: &[&str],
-        symbols: &HashMap<String, u32>
     ) -> Result<u32, AssemblerError> {
         let (rd, rs1, imm) = match operands.len() {
             // I-type load instructions
@@ -91,6 +94,7 @@ impl Parser {
                 (rd, rs1, imm)
             }
 
+            // I-type arithmetic instructions
             3 => {
                 let rd = parse_register(operands[0])?;
                 let rs1 = parse_register(operands[1])?;
@@ -118,8 +122,7 @@ impl Parser {
     pub fn parse_s_type(
         &self,
         fmt: &InstructionFormat,
-        operands: &[&str],
-        symbols: &HashMap<String, u32>
+        operands: &[&str]
     ) -> Result<u32, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
@@ -156,14 +159,24 @@ impl Parser {
 
         let rs1 = parse_register(operands[0])?;
         let rs2 = parse_register(operands[1])?;
-        let imm = parse_immediate(operands[2])?;
+
+        let offset = match parse_immediate(operands[2]) {
+            Ok(immediate) => immediate,
+            Err(_) => {
+                let target_address = symbols.get(operands[2])
+                    .ok_or_else(|| AssemblerError::UndefinedLabel(operands[2].to_string()))?;
+
+                // PC relative addressing
+                (*target_address as i32) - (current_address as i32)
+            }
+        };
 
         Ok(encode_b_type(
             fmt.opcode,
             fmt.funct3.unwrap_or(0),
             rs1,
             rs2,
-            imm
+            offset
         ))
     }
 
@@ -181,7 +194,17 @@ impl Parser {
         }
 
         let rd = parse_register(operands[0])?;
-        let imm = parse_immediate(operands[1])?;
+
+        let imm = match parse_immediate(operands[1]) {
+            Ok(immediate) => immediate,
+            Err(_) => {
+                let label = operands[1];
+                let target_address = symbols.get(label)
+                    .ok_or_else(|| AssemblerError::UndefinedLabel(label.to_string()))?;
+
+                *target_address as i32
+            }
+        };
 
         Ok(encode_u_type(
             fmt.opcode,
@@ -205,7 +228,17 @@ impl Parser {
         }
 
         let rd = parse_register(operands[0])?;
-        let imm = parse_immediate(operands[1])?;
+
+        let imm = match parse_immediate(operands[1]) {
+            Ok(immediate) => immediate,
+            Err(_) => {
+                let target_address = symbols.get(operands[1])
+                    .ok_or_else(|| AssemblerError::UndefinedLabel(operands[1].to_string()))?;
+
+                // PC relative addressing
+                (*target_address as i32) - (current_address as i32)
+            }
+        };
 
         Ok(encode_j_type(
             fmt.opcode,
@@ -216,38 +249,39 @@ impl Parser {
 }
 
 const ABI_NAME_REGISTERS: phf::Map<&'static str, u32> = phf::phf_map! {
-    "zero" => 0,
-    "ra" => 1,
-    "sp" => 2,
-    "gp" => 3,
-    "tp" => 4,
-    "t0" => 5,
-    "t1" => 6,
-    "t2" => 7,
-    "s0" => 8,
-    "s1" => 9,
-    "a0" => 10,
-    "a1" => 11,
-    "a2" => 12,
-    "a3" => 13,
-    "a4" => 14,
-    "a5" => 15,
-    "a6" => 16,
-    "a7" => 17,
-    "s2" => 18,
-    "s3" => 19,
-    "s4" => 20,
-    "s5" => 21,
-    "s6" => 22,
-    "s7" => 23,
-    "s8" => 24,
-    "s9" => 25,
-    "s10" => 26,
-    "s11" => 27,
-    "t3" => 28,
-    "t4" => 29,
-    "t5" => 30,
-    "t6" => 31,
+    "zero" => 0,  // Zero constant
+    "ra" => 1,    // Return address
+    "sp" => 2,    // Stack pointer
+    "gp" => 3,    // Global pointer
+    "tp" => 4,    // Thread pointer
+    "t0" => 5,    // Temporary
+    "t1" => 6,    // Temporary
+    "t2" => 7,    // Temporary
+    "fp" => 8,    // Frame pointer
+    "s0" => 8,    // Saved register
+    "s1" => 9,    // Saved register
+    "a0" => 10,   // Fn args/return values
+    "a1" => 11,   // Fn args
+    "a2" => 12,   // Fn args
+    "a3" => 13,   // Fn args
+    "a4" => 14,   // Fn args
+    "a5" => 15,   // Fn args
+    "a6" => 16,   // Fn args
+    "a7" => 17,   // Fn args
+    "s2" => 18,   // Saved register
+    "s3" => 19,   // Saved register
+    "s4" => 20,   // Saved register
+    "s5" => 21,   // Saved register
+    "s6" => 22,   // Saved register
+    "s7" => 23,   // Saved register
+    "s8" => 24,   // Saved register
+    "s9" => 25,   // Saved register
+    "s10" => 26,  // Saved register
+    "s11" => 27,  // Saved register
+    "t3" => 28,   // Temporary
+    "t4" => 29,   // Temporary
+    "t5" => 30,   // Temporary
+    "t6" => 31,   // Temporary
 };
 
 // Parse registers x0 to x31

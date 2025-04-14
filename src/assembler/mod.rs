@@ -4,7 +4,6 @@ pub mod instructions;
 pub mod encoder;
 
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 

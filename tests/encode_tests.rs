@@ -58,19 +58,29 @@ mod tests {
     fn test_encode_u_type() {
         // lui
         let opcode = 0b011_0111;
-        let rd = 4;
-        let imm = 0x12345678;
-        let encoded = encode_u_type(opcode, rd, imm);
+        let mut rd = 4;
+        let mut imm = 0x12345678;
+        let mut encoded = encode_u_type(opcode, rd, imm);
         assert_eq!(encoded, 0x12345237);
+
+        rd = 15;
+        imm = 10000;
+        encoded = encode_u_type(opcode, rd, imm);
+        assert_eq!(encoded, 0x27b7);
     }
 
     #[test]
     fn test_encode_j_type() {
         // jal
         let opcode = 0b110_1111;
-        let rd = 4;
-        let imm = 0x7FFFFFFF;
-        let encoded = encode_j_type(opcode, rd, imm);
+        let mut rd = 4;
+        let mut imm = 0x7FFFFFFF;
+        let mut encoded = encode_j_type(opcode, rd, imm);
         assert_eq!(encoded, 0xFFFFF26F);
+
+        rd = 5;
+        imm = 12;
+        encoded = encode_j_type(opcode, rd, imm);
+        assert_eq!(encoded, 0xC002EF);
     }
 }

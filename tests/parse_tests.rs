@@ -2,6 +2,7 @@
 mod tests {
     use riscv_assembler::assembler::parser::*;
     use riscv_assembler::assembler::instructions::{InstructionType, InstructionFormat};
+    use std::collections::HashMap;
 
     #[test]
     fn test_parse_immediate() {
@@ -87,6 +88,8 @@ mod tests {
 
     #[test]
     fn test_parse_b_type() {
+        use std::collections::HashMap;
+
         let parser = Parser::new();
         let beq = InstructionFormat {
             fmt: InstructionType::B,
@@ -95,12 +98,35 @@ mod tests {
             funct7: None
         };
 
+        let mut symbols = HashMap::<String, u32>::new();
+        symbols.insert("test".to_string(), 12);
+
+        let mut current_address = 0;
+
         assert_eq!(
-            parser.parse_b_type(&beq, &["x5", "x6", "0x123"]),
+            parser.parse_b_type(&beq, &["x5", "x6", "0x123"], current_address, &symbols),
             Ok(0b0001_0010_0110_0010_1000_0001_0110_0011)
+        );
+
+        assert_eq!(
+            parser.parse_b_type(&beq, &["x0", "x0", "12"], current_address, &symbols),
+            Ok(0b0000_0000_0000_0000_0000_0110_0110_0011)
+        );
+        
+        assert_eq!(
+            parser.parse_b_type(&beq, &["x0", "x0", "test"], current_address, &symbols),
+            Ok(0b0000_0000_0000_0000_0000_0110_0110_0011)
+        );
+        
+        current_address = 4;
+
+        assert_eq!(
+            parser.parse_b_type(&beq, &["x0", "x0", "test"], current_address, &symbols),
+            Ok(0b0000_0000_0000_0000_0000_0100_0110_0011)
         );
     }
 
+    #[test]
     fn test_parse_u_type() {
         let parser = Parser::new();
         let lui = InstructionFormat {
@@ -110,12 +136,21 @@ mod tests {
             funct7: None
         };
 
+        let mut symbols = HashMap::<String, u32>::new();
+        symbols.insert("test".to_string(), 10000);
+
         assert_eq!(
-            parser.parse_u_type(&lui, &["x4", "0x12345678"]),
+            parser.parse_u_type(&lui, &["x4", "0x12345678"], &symbols),
             Ok(0b0001_0010_0011_0100_0101_0010_0011_0111)
-        )
+        );
+
+        assert_eq!(
+            parser.parse_u_type(&lui, &["x15", "test"], &symbols),
+            Ok(0x27b7)
+        );
     }
 
+    #[test]
     fn test_parse_j_type() {
         let parser = Parser::new();
         let jal = InstructionFormat {
@@ -125,10 +160,32 @@ mod tests {
             funct7: None
         };
 
+        let mut symbols = HashMap::<String, u32>::new();
+        symbols.insert("test".to_string(), 20);
+
+        let mut current_address = 8;
+
         assert_eq!(
-            parser.parse_j_type(&jal, &["x4", "0x7FFFFFFF"]),
+            parser.parse_j_type(&jal, &["x4", "0x7FFFFFFF"], current_address, &symbols),
             Ok(0b1111_1111_1111_1111_1111_0010_0110_1111)
-        )
+        );
+
+        assert_eq!(
+            parser.parse_j_type(&jal, &["x5", "12"], current_address, &symbols),
+            Ok(0xC002EF)
+        );
+
+        assert_eq!(
+            parser.parse_j_type(&jal, &["x5", "test"], current_address, &symbols),
+            Ok(0xC002EF)
+        );
+
+        current_address = 12;
+        
+        assert_eq!(
+            parser.parse_j_type(&jal, &["x5", "test"], current_address, &symbols),
+            Ok(0x8002EF)
+        );
     }
 
     #[test]
