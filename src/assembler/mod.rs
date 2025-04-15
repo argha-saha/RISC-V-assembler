@@ -2,6 +2,7 @@ pub mod parser;
 mod error;
 pub mod instructions;
 pub mod encoder;
+pub mod hexdump;
 
 use std::collections::HashMap;
 use std::fs::File;
