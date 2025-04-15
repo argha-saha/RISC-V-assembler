@@ -16,18 +16,27 @@ impl Parser {
 
     pub fn parse_line(
         &self,
-        line: &str,
+        mut line: &str,
         current_address: u32,
         symbols: &HashMap<String, u32>
     ) -> Result<Option<u32>, AssemblerError> {
-        let line = line
-            .split('#')
-            .next()
-            .unwrap()
-            .trim();
+        // Skip comments or extract the code before a comment
+        line = line.split('#').next().unwrap().trim();
 
         if line.is_empty() {
             return Ok(None);
+        }
+
+        // Label detection
+        if let Some(colon_index) = line.find(':') {
+            let after_label = &line[colon_index + 1..].trim();
+
+            if after_label.is_empty() {
+                // No instruction after label
+                return Ok(None);
+            }
+
+            line = after_label;
         }
 
         // "add x4, x5, x6" -> vec!["add", "x4", "x5", "x6"]
