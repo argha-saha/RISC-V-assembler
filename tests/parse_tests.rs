@@ -484,6 +484,10 @@ mod tests {
         reg_num = parse_register(reg_name).unwrap();
         assert_eq!(reg_num, 7);
 
+        reg_name = "fp";
+        reg_num = parse_register(reg_name).unwrap();
+        assert_eq!(reg_num, 8);
+
         reg_name = "s0";
         reg_num = parse_register(reg_name).unwrap();
         assert_eq!(reg_num, 8);

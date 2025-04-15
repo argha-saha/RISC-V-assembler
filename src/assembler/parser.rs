@@ -31,7 +31,9 @@ impl Parser {
         }
 
         // "add x4, x5, x6" -> vec!["add", "x4", "x5", "x6"]
-        let parts: Vec<&str> = line.split_whitespace().collect();
+        let parts: Vec<&str> = line.split_whitespace()
+            .map(|s| s.trim_end_matches(','))
+            .collect();
         
         // Holds the instruction and operands
         let mnemonic = parts[0];
