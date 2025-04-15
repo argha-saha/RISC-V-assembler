@@ -1,3 +1,5 @@
+//! Defines the RISC-V instruction set
+
 use phf::phf_map;
 
 #[derive(Debug, Copy, Clone)]

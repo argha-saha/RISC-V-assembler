@@ -1,4 +1,4 @@
-//! This module contains functions for encoding instructions into machine code.
+//! Functions for encoding RISC-V instructions into 32-bit binary format
 
 // R-type Instruction Format
 // funct7 | rs2 | rs1 | funct3 | rd | opcode

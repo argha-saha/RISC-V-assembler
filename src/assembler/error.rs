@@ -1,3 +1,5 @@
+//! Implements the AssemblerError enum for handling errors in the assembler
+
 use std::{fmt, io};
 
 #[derive(Debug, PartialEq)]

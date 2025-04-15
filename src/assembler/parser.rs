@@ -1,3 +1,5 @@
+//! Parses RISC-V instructions into 32-bit machine code
+
 use std::collections::HashMap;
 use crate::assembler::error::AssemblerError;
 use crate::assembler::instructions::{InstructionFormat, InstructionSet, InstructionType};
