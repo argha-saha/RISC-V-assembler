@@ -15,7 +15,7 @@ impl PseudoInstructions {
     // TODO: Put the pseudo-instructions in a phf map
     pub fn is_pseudo_instruction(mnemonic: &str) -> bool {
         match mnemonic {
-            "nop" | "mv" | "not" | "seqz" | "j" => true,
+            "nop" | "mv" | "not" | "seqz" | "snez" | "j" => true,
             _ => false,
         }
     }
@@ -33,6 +33,7 @@ impl PseudoInstructions {
             "not" => Self::translate_not(operands),
             "neg" => Self::translate_neg(operands),
             "seqz" => Self::translate_seqz(operands),
+            "snez" => Self::translate_snez(operands),
             "j" => Self::translate_j(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
@@ -137,6 +138,27 @@ impl PseudoInstructions {
                     operands[0].to_string(),  // rd
                     operands[1].to_string(),  // rs
                     "1".to_string()
+                ]
+            }
+        ])
+    }
+
+    // snez rd, rs => sltu rd, x0, rs
+    fn translate_snez<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for snez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "sltu",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    "x0".to_string(),
+                    operands[1].to_string()   // rs
                 ]
             }
         ])
