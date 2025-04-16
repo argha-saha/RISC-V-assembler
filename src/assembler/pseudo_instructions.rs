@@ -18,7 +18,9 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "snez",
     "sltz",
     "sgtz",
-    "j"
+    "j",
+    "jr",
+    "ret"
 };
 
 pub struct PseudoInstructions;
@@ -50,6 +52,8 @@ impl PseudoInstructions {
             "sltz" => Self::translate_sltz(operands),
             "sgtz" => Self::translate_sgtz(operands),
             "j" => Self::translate_j(operands),
+            "jr" => Self::translate_jr(operands),
+            "ret" => Self::translate_ret(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
             ))),
@@ -257,6 +261,27 @@ impl PseudoInstructions {
                     "x0".to_string(),         // x0
                     operands[0].to_string(),  // rs
                     "0".to_string()           // 0
+                ]
+            }
+        ])
+    }
+
+    // ret => jalr x0, x1, 0
+    fn translate_ret<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 0 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 0 operands for ret but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "jalr",
+                operands: vec![
+                    "x0".to_string(),  // x0
+                    "x1".to_string(),  // x1
+                    "0".to_string()    // 0
                 ]
             }
         ])
