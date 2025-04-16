@@ -12,9 +12,10 @@ pub struct PseudoInstructions;
 
 impl PseudoInstructions {
     // Check if a mnemonic is a pseudo-instruction
+    // TODO: Put the pseudo-instructions in a phf map
     pub fn is_pseudo_instruction(mnemonic: &str) -> bool {
         match mnemonic {
-            "nop" | "mv" | "not" => true,
+            "nop" | "mv" | "not" | "seqz" | "j" => true,
             _ => false,
         }
     }
@@ -31,6 +32,8 @@ impl PseudoInstructions {
             "mv" => Self::translate_mv(operands),
             "not" => Self::translate_not(operands),
             "neg" => Self::translate_neg(operands),
+            "seqz" => Self::translate_seqz(operands),
+            "j" => Self::translate_j(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
             ))),
@@ -97,10 +100,11 @@ impl PseudoInstructions {
         ])
     }
 
+    // neg rd, rs => sub rd, x0, rs
     fn translate_neg<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
-                "Expected 2 operands but received {}",
+                "Expected 2 operands for neg but received {}",
                 operands.len()
             )))
         }
@@ -112,6 +116,47 @@ impl PseudoInstructions {
                     operands[0].to_string(),  // rd
                     "x0".to_string(),
                     operands[1].to_string(),  // rs
+                ]
+            }
+        ])
+    }
+
+    // seqz rd, rs => sltiu rd, rs, 1
+    fn translate_seqz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for seqz but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "sltiu",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    operands[1].to_string(),  // rs
+                    "1".to_string()
+                ]
+            }
+        ])
+    }
+
+    // j offset => jal x0, offset
+    fn translate_j<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 1 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 1 operand for j but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "jal",
+                operands: vec![
+                    "x0".to_string(),
+                    operands[0].to_string(),  // offset
                 ]
             }
         ])
