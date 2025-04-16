@@ -12,7 +12,7 @@ pub struct PseudoInstructions;
 
 impl PseudoInstructions {
     // Check if a mnemonic is a pseudo-instruction
-    // TODO: Put the pseudo-instructions in a phf map
+    // TODO: Put the pseudo-instructions in a phf set
     pub fn is_pseudo_instruction(mnemonic: &str) -> bool {
         match mnemonic {
             "nop" | "mv" | "not" | "seqz" | "snez" | "j" => true,
@@ -95,7 +95,7 @@ impl PseudoInstructions {
                 operands: vec![
                     operands[0].to_string(),  // rd
                     operands[1].to_string(),  // rs
-                    "-1".to_string()
+                    "-1".to_string()          // -1
                 ]
             }
         ])
@@ -115,7 +115,7 @@ impl PseudoInstructions {
                 mnemonic: "sub",
                 operands: vec![
                     operands[0].to_string(),  // rd
-                    "x0".to_string(),
+                    "x0".to_string(),         // x0
                     operands[1].to_string(),  // rs
                 ]
             }
@@ -137,7 +137,7 @@ impl PseudoInstructions {
                 operands: vec![
                     operands[0].to_string(),  // rd
                     operands[1].to_string(),  // rs
-                    "1".to_string()
+                    "1".to_string()           // 1
                 ]
             }
         ])
@@ -157,7 +157,7 @@ impl PseudoInstructions {
                 mnemonic: "sltu",
                 operands: vec![
                     operands[0].to_string(),  // rd
-                    "x0".to_string(),
+                    "x0".to_string(),         // x0
                     operands[1].to_string()   // rs
                 ]
             }
@@ -177,8 +177,50 @@ impl PseudoInstructions {
             TranslatedInstruction {
                 mnemonic: "jal",
                 operands: vec![
-                    "x0".to_string(),
+                    "x0".to_string(),         // x0
                     operands[0].to_string(),  // offset
+                ]
+            }
+        ])
+    }
+
+    // sltz rd, rs => slt rd, rs, x0
+    fn translate_sltz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for snez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "slt",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    operands[1].to_string(),  // rs
+                    "x0".to_string()          // x0
+                ]
+            }
+        ])
+    }
+
+    // sgtz rd, rs => slt rd, x0, rs
+    fn translate_sgtz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for snez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "slt",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    "x0".to_string(),         // x0
+                    operands[1].to_string()   // rs
                 ]
             }
         ])
