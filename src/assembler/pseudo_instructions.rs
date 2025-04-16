@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use crate::assembler::AssemblerError;
 
-pub struct ConvertedInstruction<'a> {
+pub struct TranslatedInstruction<'a> {
     pub mnemonic: &'a str,
     pub operands: Vec<String>,
 }
@@ -14,20 +14,21 @@ impl PseudoInstructions {
     // Check if a mnemonic is a pseudo-instruction
     pub fn is_pseudo_instruction(mnemonic: &str) -> bool {
         match mnemonic {
-            "nop" => true,
+            "nop" | "mv" => true,
             _ => false,
         }
     }
     
-    // Convert/expand a pseudo-instruction into one or more base instructions
+    // Translate a pseudo-instruction into one or more base instructions
     pub fn expand<'a>(
         mnemonic: &'a str, 
         operands: &[&str], 
-        current_address: u32, 
-        symbols: &HashMap<String, u32>
-    ) -> Result<Vec<ConvertedInstruction<'a>>, AssemblerError> {
+        _current_address: u32, 
+        _symbols: &HashMap<String, u32>
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         match mnemonic {
-            "nop" => Self::convert_nop(operands),
+            "nop" => Self::translate_nop(operands),
+            "mv" => Self::translate_mv(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
             ))),
@@ -35,7 +36,7 @@ impl PseudoInstructions {
     }
     
     // nop => addi x0, x0, 0
-    fn convert_nop<'a>(operands: &[&str]) -> Result<Vec<ConvertedInstruction<'a>>, AssemblerError> {
+    fn translate_nop<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if !operands.is_empty() {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 0 operands for nop but received {}", operands.len()
@@ -43,12 +44,32 @@ impl PseudoInstructions {
         }
         
         Ok(vec![
-            ConvertedInstruction {
+            TranslatedInstruction {
                 mnemonic: "addi",
                 operands: vec![
                     "x0".to_string(),  // x0
                     "x0".to_string(),  // x0
                     "0".to_string(),   // 0
+                ],
+            }
+        ])
+    }
+
+    // mv rd, rs => addi rd, rs, 0
+    fn translate_mv<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::ParseError(format!(
+                "Expected 2 operands for mv but received {}", operands.len()
+            )));
+        }
+        
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "addi",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    operands[1].to_string(),  // rs
+                    "0".to_string(),          // 0
                 ],
             }
         ])
