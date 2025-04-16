@@ -39,6 +39,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0100000)
     },
 
+    // SUB Word (RV64)
+    "subw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
+        funct3: Some(0b000),
+        funct7: Some(0b0100000)
+    },
+
     // XOR
     "xor" => InstructionFormat {
         fmt: InstructionType::R,
@@ -109,6 +117,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
     "addi" => InstructionFormat {
         fmt: InstructionType::I,
         opcode: 0b0010011,
+        funct3: Some(0b000),
+        funct7: None
+    },
+
+    // ADD Immediate Word (RV64)
+    "addiw" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0011011,
         funct3: Some(0b000),
         funct7: None
     },
