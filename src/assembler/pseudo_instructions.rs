@@ -387,6 +387,60 @@ impl PseudoInstructions {
         ])
     }
 
+    // ble rs, rt, offset => bge rt, rs, offset
+    fn translate_ble<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("ble", operands, 3)?;
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bge",
+                operands: vec![
+                    operands[1].to_string(),  // rt
+                    operands[0].to_string(),  // rs
+                    operands[2].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bgtu rs, rt, offset => bltu rt, rs, offset
+    fn translate_bgtu<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("bgtu", operands, 3)?;
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bltu",
+                operands: vec![
+                    operands[1].to_string(),  // rt
+                    operands[0].to_string(),  // rs
+                    operands[2].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bleu rs, rt, offset => bgeu rt, rs, offset
+    fn translate_bleu<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("bleu", operands, 3)?;
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bgeu",
+                operands: vec![
+                    operands[1].to_string(),  // rt
+                    operands[0].to_string(),  // rs
+                    operands[2].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
     // j offset => jal x0, offset
     fn translate_j<'a>(
         operands: &[&str]
