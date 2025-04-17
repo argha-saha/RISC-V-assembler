@@ -59,6 +59,11 @@ impl PseudoInstructions {
             "sltz" => Self::translate_sltz(operands),
             "sgtz" => Self::translate_sgtz(operands),
             "beqz" => Self::translate_beqz(operands),
+            "bnez" => Self::translate_bnez(operands),
+            "blez" => Self::translate_blez(operands),
+            "bgez" => Self::translate_bgez(operands),
+            "bltz" => Self::translate_bltz(operands),
+            "bgtz" => Self::translate_bgtz(operands),
             "j" => Self::translate_j(operands),
             "jr" => Self::translate_jr(operands),
             "ret" => Self::translate_ret(operands),
@@ -309,9 +314,124 @@ impl PseudoInstructions {
             TranslatedInstruction {
                 mnemonic: "beq",
                 operands: vec![
-                    operands[0].to_string(),
-                    "x0".to_string(),
-                    operands[1].to_string()
+                    operands[0].to_string(),  // rs
+                    "x0".to_string(),         // x0
+                    operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bnez rs, offset => bne rs, x0, offset
+    fn translate_bnez<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for bnez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bne",
+                operands: vec![
+                    operands[0].to_string(),  // rs
+                    "x0".to_string(),         // x0
+                    operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // blez rs, offset => bge x0, rs, offset
+    fn translate_blez<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for blez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bge",
+                operands: vec![
+                    "x0".to_string(),         // x0
+                    operands[0].to_string(),  // rs
+                    operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bgez rs, offset => bge rs, x0, offset
+    fn translate_bgez<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for bgez but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "bge",
+                operands: vec![
+                    operands[0].to_string(),  // rs
+                    "x0".to_string(),         // x0
+                    operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bltz rs, offset => bge rs, x0, offset
+    fn translate_bltz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for bltz but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "blt",
+                operands: vec![
+                    operands[0].to_string(),  // rs
+                    "x0".to_string(),         // x0
+                    operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bgtz rs, offset => blt x0, rs, offset
+    fn translate_bgtz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for bgtz but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "blt",
+                operands: vec![
+                    "x0".to_string(),         // x0
+                    operands[0].to_string(),  // rs
+                    operands[1].to_string()   // offset
                 ]
             }
         ])
