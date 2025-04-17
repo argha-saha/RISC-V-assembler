@@ -1,6 +1,5 @@
 //! Provides functionality for handling pseudo-instructions
 
-use std::collections::HashMap;
 use phf::phf_set;
 use crate::assembler::AssemblerError;
 
@@ -20,6 +19,12 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "snez",
     "sltz",
     "sgtz",
+    "beqz",
+    "bnez",
+    "blez",
+    "bgez",
+    "bltz",
+    "bgtz",
     "j",
     "jr",
     "ret"
@@ -40,9 +45,7 @@ impl PseudoInstructions {
     // Translate a pseudo-instruction into one or more base instructions
     pub fn expand<'a>(
         mnemonic: &'a str, 
-        operands: &[&str], 
-        _current_address: u32, 
-        _symbols: &HashMap<String, u32>
+        operands: &[&str]
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         match mnemonic {
             "nop" => Self::translate_nop(operands),
@@ -55,6 +58,7 @@ impl PseudoInstructions {
             "snez" => Self::translate_snez(operands),
             "sltz" => Self::translate_sltz(operands),
             "sgtz" => Self::translate_sgtz(operands),
+            "beqz" => Self::translate_beqz(operands),
             "j" => Self::translate_j(operands),
             "jr" => Self::translate_jr(operands),
             "ret" => Self::translate_ret(operands),
@@ -285,6 +289,29 @@ impl PseudoInstructions {
                     operands[0].to_string(),  // rd
                     "x0".to_string(),         // x0
                     operands[1].to_string()   // rs
+                ]
+            }
+        ])
+    }
+
+    // beqz rs, offset => beq rs, x0, offset
+    fn translate_beqz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for beqz but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "beq",
+                operands: vec![
+                    operands[0].to_string(),
+                    "x0".to_string(),
+                    operands[1].to_string()
                 ]
             }
         ])
