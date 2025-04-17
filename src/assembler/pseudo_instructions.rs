@@ -14,6 +14,8 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "mv",
     "not",
     "neg",
+    "negw",
+    "sext.w",
     "seqz",
     "snez",
     "sltz",
@@ -47,6 +49,8 @@ impl PseudoInstructions {
             "mv" => Self::translate_mv(operands),
             "not" => Self::translate_not(operands),
             "neg" => Self::translate_neg(operands),
+            "negw" => Self::translate_negw(operands),
+            "sext.w" => Self::translate_sextw(operands),
             "seqz" => Self::translate_seqz(operands),
             "snez" => Self::translate_snez(operands),
             "sltz" => Self::translate_sltz(operands),
@@ -61,7 +65,9 @@ impl PseudoInstructions {
     }
     
     // nop => addi x0, x0, 0
-    fn translate_nop<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_nop<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if !operands.is_empty() {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 0 operands for nop but received {}", operands.len()
@@ -81,7 +87,9 @@ impl PseudoInstructions {
     }
 
     // mv rd, rs => addi rd, rs, 0
-    fn translate_mv<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_mv<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands for mv but received {}", operands.len()
@@ -101,7 +109,9 @@ impl PseudoInstructions {
     }
 
     // not rd, rs => xori rd, rs, -1
-    fn translate_not<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_not<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::ParseError(format!(
                 "Expected 2 operands for not but received {}", operands.len()
@@ -121,7 +131,9 @@ impl PseudoInstructions {
     }
 
     // neg rd, rs => sub rd, x0, rs
-    fn translate_neg<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_neg<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 2 operands for neg but received {}",
@@ -141,8 +153,55 @@ impl PseudoInstructions {
         ])
     }
 
+    // negw rd, rs => subw rd, x0, rs
+    fn translate_negw<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::InvalidOperand(format!(
+                "Expected 2 operands for negw but received {}",
+                operands.len()
+            )))
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "subw",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    "x0".to_string(),         // x0
+                    operands[1].to_string(),  // rs
+                ]
+            }
+        ])
+    }
+
+    // sext.w rd, rs => addiw rd, rs, 0
+    fn translate_sextw<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        if operands.len() != 2 {
+            return Err(AssemblerError::ParseError(format!(
+                "Expected 2 operands for sext.w but received {}", operands.len()
+            )));
+        }
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "addiw",
+                operands: vec![
+                    operands[0].to_string(),  // rd
+                    operands[1].to_string(),  // rs
+                    "0".to_string()           // 0
+                ]
+            }
+        ])
+    }
+
     // seqz rd, rs => sltiu rd, rs, 1
-    fn translate_seqz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_seqz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 2 operands for seqz but received {}",
@@ -163,7 +222,9 @@ impl PseudoInstructions {
     }
 
     // snez rd, rs => sltu rd, x0, rs
-    fn translate_snez<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_snez<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 2 operands for snez but received {}",
@@ -184,7 +245,9 @@ impl PseudoInstructions {
     }
 
     // sltz rd, rs => slt rd, rs, x0
-    fn translate_sltz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_sltz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 2 operands for snez but received {}",
@@ -205,7 +268,9 @@ impl PseudoInstructions {
     }
 
     // sgtz rd, rs => slt rd, x0, rs
-    fn translate_sgtz<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_sgtz<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 2 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 2 operands for snez but received {}",
@@ -226,7 +291,9 @@ impl PseudoInstructions {
     }
 
     // j offset => jal x0, offset
-    fn translate_j<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_j<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 1 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 1 operand for j but received {}",
@@ -246,7 +313,9 @@ impl PseudoInstructions {
     }
 
     // jr rs => jalr x0, rs, 0
-    fn translate_jr<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_jr<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         if operands.len() != 1 {
             return Err(AssemblerError::InvalidOperand(format!(
                 "Expected 1 operand for jr but received {}",
