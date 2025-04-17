@@ -25,6 +25,10 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "bgez",
     "bltz",
     "bgtz",
+    "bgt",
+    "ble",
+    "bgtu",
+    "bleu",
     "j",
     "jr",
     "ret"
@@ -64,6 +68,10 @@ impl PseudoInstructions {
             "bgez" => Self::translate_bgez(operands),
             "bltz" => Self::translate_bltz(operands),
             "bgtz" => Self::translate_bgtz(operands),
+            "bgt" => Self::translate_bgt(operands),
+            "ble" => Self::translate_ble(operands),
+            "bgtu" => Self::translate_bgtu(operands),
+            "bleu" => Self::translate_bleu(operands),
             "j" => Self::translate_j(operands),
             "jr" => Self::translate_jr(operands),
             "ret" => Self::translate_ret(operands),
@@ -356,6 +364,24 @@ impl PseudoInstructions {
                     "x0".to_string(),         // x0
                     operands[0].to_string(),  // rs
                     operands[1].to_string()   // offset
+                ]
+            }
+        ])
+    }
+
+    // bgt rs, rt, offset => blt rt, rs, offset
+    fn translate_bgt<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("bgt", operands, 3)?;
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "blt",
+                operands: vec![
+                    operands[1].to_string(),  // rt
+                    operands[0].to_string(),  // rs
+                    operands[2].to_string()   // offset
                 ]
             }
         ])
