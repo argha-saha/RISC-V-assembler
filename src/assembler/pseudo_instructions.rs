@@ -10,6 +10,7 @@ pub struct TranslatedInstruction<'a> {
 }
 
 static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
+    "la",
     "nop",
     "li",
     "mv",
@@ -54,6 +55,7 @@ impl PseudoInstructions {
         operands: &[&str]
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         match mnemonic {
+            "la" => Self::translate_la(operands),
             "nop" => Self::translate_nop(operands),
             "li" => Self::translate_li(operands),
             "mv" => Self::translate_mv(operands),
@@ -82,6 +84,36 @@ impl PseudoInstructions {
                 "Unknown pseudo-instruction: {}", mnemonic
             )))
         }
+    }
+
+    // Load address
+    // la rd, symbol => auipc + addi
+    fn translate_la<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("la", operands, 2)?;
+        let rd = operands[0];
+        let symbol = operands[1];
+
+        Ok(vec![
+            // Upper 20-bits
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    rd.to_string(),
+                    symbol.to_string()
+                ]
+            },
+            // Lower 12-bits
+            TranslatedInstruction {
+                mnemonic: "addi",
+                operands: vec![
+                    rd.to_string(),
+                    rd.to_string(),
+                    symbol.to_string()
+                ]
+            }
+        ])
     }
     
     // No operation
