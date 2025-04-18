@@ -444,6 +444,72 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct3: Some(0b000),
         funct7: Some(0b0000001)
     },
+
+    /* RV32M Multiply Extension */
+
+    // MUL
+    "mul" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b000),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High
+    "mulh" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b001),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High (S) (U)
+    "mulsu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b010),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High (U)
+    "mulu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b011),
+        funct7: Some(0b0000001)
+    },
+
+    // DIV
+    "div" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b100),
+        funct7: Some(0b0000001)
+    },
+
+    // DIV (U)
+    "divu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b101),
+        funct7: Some(0b0000001)
+    },
+
+    // Remainder
+    "rem" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b110),
+        funct7: Some(0b0000001)
+    },
+
+    // Remainder (U)
+    "remu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b111),
+        funct7: Some(0b0000001)
+    }
 };
 
 pub struct InstructionSet;
