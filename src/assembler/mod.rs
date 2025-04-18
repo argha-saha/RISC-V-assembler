@@ -102,6 +102,7 @@ impl Assembler {
         Ok(())
     }
 
+    // Helper function to process a single instruction and update the address
     fn process_instruction(
         &self,
         src: &str,
@@ -122,10 +123,12 @@ impl Assembler {
         }
     }
 
+    // Helper function to increment the address
+    // Necessary to handle pseudo-instructions that split into multiple base instructions
     fn increment_address(&self, src: &str, addr: &mut u32) {
         match self.parser.parse_line(src, *addr, &HashMap::new()) {
-            // Needed for pseudo-instructions that split into multiple base instructions
-            Ok(instructions) => *addr += (instructions.len() as u32 * 4),
+            // Ensures symbols have correct addresses
+            Ok(instructions) => *addr += instructions.len() as u32 * 4,
             Err(_) => *addr += 4
         }
     }

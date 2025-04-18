@@ -2,6 +2,7 @@
 
 use phf::phf_set;
 use crate::assembler::AssemblerError;
+use crate::assembler::parser::parse_immediate;
 
 pub struct TranslatedInstruction<'a> {
     pub mnemonic: &'a str,
@@ -10,6 +11,7 @@ pub struct TranslatedInstruction<'a> {
 
 static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "nop",
+    "li",
     "mv",
     "not",
     "neg",
@@ -53,6 +55,7 @@ impl PseudoInstructions {
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         match mnemonic {
             "nop" => Self::translate_nop(operands),
+            "li" => Self::translate_li(operands),
             "mv" => Self::translate_mv(operands),
             "not" => Self::translate_not(operands),
             "neg" => Self::translate_neg(operands),
@@ -81,6 +84,7 @@ impl PseudoInstructions {
         }
     }
     
+    // No operation
     // nop => addi x0, x0, 0
     fn translate_nop<'a>(
         operands: &[&str]
@@ -99,6 +103,60 @@ impl PseudoInstructions {
         ])
     }
 
+    // Load immediate
+    // li rd, immediate => lui + addi
+    fn translate_li<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("li", operands,2)?;
+        let rd = operands[0];
+        let imm = parse_immediate(operands[1])?;
+
+        // Case 1: immediate fits within the 12-bit range
+        if (-2048..=2047).contains(&imm) {
+            return Ok(vec![
+                TranslatedInstruction {
+                    mnemonic: "addi",
+                    operands: vec![
+                        rd.to_string(),
+                        "x0".to_string(),
+                        imm.to_string()
+                    ]
+                }
+            ])
+        }
+
+        // Case 2: immediate requires lui + addi
+        let imm_upper = ((imm + 0x800) >> 12) as i32;  // Upper 20 bits
+        let imm_lower = imm - (imm_upper << 12);       // Lower 12 bits signed
+
+        let mut expanded = vec![
+            TranslatedInstruction {
+                mnemonic: "lui",
+                operands: vec![
+                    rd.to_string(),        // rd
+                    imm_upper.to_string()  // imm[31:12]
+                ]
+            }
+        ];
+
+        if imm_lower != 0 {
+            expanded.push(
+                TranslatedInstruction {
+                    mnemonic: "addi",
+                    operands: vec![
+                        rd.to_string(),        // rd
+                        rd.to_string(),        // rd
+                        imm_lower.to_string()  // imm[11:0]
+                    ]
+                }
+            )
+        }
+
+        Ok(expanded)
+    }
+
+    // Copy register
     // mv rd, rs => addi rd, rs, 0
     fn translate_mv<'a>(
         operands: &[&str]
@@ -117,6 +175,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // One's complement
     // not rd, rs => xori rd, rs, -1
     fn translate_not<'a>(
         operands: &[&str]
@@ -135,6 +194,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Two's complement
     // neg rd, rs => sub rd, x0, rs
     fn translate_neg<'a>(
         operands: &[&str]
@@ -153,6 +213,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Two's complement word
     // negw rd, rs => subw rd, x0, rs
     fn translate_negw<'a>(
         operands: &[&str]
@@ -171,6 +232,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Sign extend word
     // sext.w rd, rs => addiw rd, rs, 0
     fn translate_sextw<'a>(
         operands: &[&str]
@@ -189,6 +251,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Set if == zero
     // seqz rd, rs => sltiu rd, rs, 1
     fn translate_seqz<'a>(
         operands: &[&str]
@@ -207,6 +270,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Set if != zero
     // snez rd, rs => sltu rd, x0, rs
     fn translate_snez<'a>(
         operands: &[&str]
@@ -225,6 +289,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Set if < zero
     // sltz rd, rs => slt rd, rs, x0
     fn translate_sltz<'a>(
         operands: &[&str]
@@ -243,6 +308,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Set if > zero
     // sgtz rd, rs => slt rd, x0, rs
     fn translate_sgtz<'a>(
         operands: &[&str]
@@ -261,6 +327,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if == zero
     // beqz rs, offset => beq rs, x0, offset
     fn translate_beqz<'a>(
         operands: &[&str]
@@ -279,6 +346,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if != zero
     // bnez rs, offset => bne rs, x0, offset
     fn translate_bnez<'a>(
         operands: &[&str]
@@ -297,6 +365,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if <= zero
     // blez rs, offset => bge x0, rs, offset
     fn translate_blez<'a>(
         operands: &[&str]
@@ -315,6 +384,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if >= zero
     // bgez rs, offset => bge rs, x0, offset
     fn translate_bgez<'a>(
         operands: &[&str]
@@ -333,6 +403,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if < zero
     // bltz rs, offset => bge rs, x0, offset
     fn translate_bltz<'a>(
         operands: &[&str]
@@ -351,6 +422,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if > zero
     // bgtz rs, offset => blt x0, rs, offset
     fn translate_bgtz<'a>(
         operands: &[&str]
@@ -369,6 +441,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if >
     // bgt rs, rt, offset => blt rt, rs, offset
     fn translate_bgt<'a>(
         operands: &[&str]
@@ -387,6 +460,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if <=
     // ble rs, rt, offset => bge rt, rs, offset
     fn translate_ble<'a>(
         operands: &[&str]
@@ -405,6 +479,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if >, unsigned
     // bgtu rs, rt, offset => bltu rt, rs, offset
     fn translate_bgtu<'a>(
         operands: &[&str]
@@ -423,6 +498,7 @@ impl PseudoInstructions {
         ])
     }
 
+    // Branch if <=, unsigned
     // bleu rs, rt, offset => bgeu rt, rs, offset
     fn translate_bleu<'a>(
         operands: &[&str]
@@ -441,11 +517,12 @@ impl PseudoInstructions {
         ])
     }
 
+    // Jump
     // j offset => jal x0, offset
     fn translate_j<'a>(
         operands: &[&str]
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
-        check_operands("j", operands, 2)?;
+        check_operands("j", operands, 1)?;
 
         Ok(vec![
             TranslatedInstruction {
@@ -458,11 +535,12 @@ impl PseudoInstructions {
         ])
     }
 
+    // Jump register
     // jr rs => jalr x0, rs, 0
     fn translate_jr<'a>(
         operands: &[&str]
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
-        check_operands("jr", operands, 2)?;
+        check_operands("jr", operands, 1)?;
 
         Ok(vec![
             TranslatedInstruction {
@@ -476,9 +554,10 @@ impl PseudoInstructions {
         ])
     }
 
+    // Return from subroutine
     // ret => jalr x0, x1, 0
     fn translate_ret<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
-        check_operands("ret", operands, 2)?;
+        check_operands("ret", operands, 0)?;
 
         Ok(vec![
             TranslatedInstruction {
