@@ -567,6 +567,24 @@ impl PseudoInstructions {
         ])
     }
 
+    // Jump and link
+    // jal offset => jal x1, offset
+    fn translate_jal<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands("jal", operands, 1)?;
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "jal",
+                operands: vec![
+                    "x1".to_string(),        // x1
+                    operands[0].to_string()  // offset
+                ]
+            }
+        ])
+    }
+
     // Jump register
     // jr rs => jalr x0, rs, 0
     fn translate_jr<'a>(
