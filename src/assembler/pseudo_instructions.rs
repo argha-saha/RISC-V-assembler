@@ -72,10 +72,10 @@ impl PseudoInstructions {
             "lh" => Self::translate_load_global(mnemonic, operands),
             "lw" => Self::translate_load_global(mnemonic, operands),
             "ld" => Self::translate_load_global(mnemonic, operands),
-            // "sb",
-            // "sh",
-            // "sw",
-            // "sd",
+            "sb" => Self::translate_store_global(mnemonic, operands),
+            "sh" => Self::translate_store_global(mnemonic, operands),
+            "sw" => Self::translate_store_global(mnemonic, operands),
+            "sd" => Self::translate_store_global(mnemonic, operands),
             "nop" => Self::translate_nop(operands),
             "li" => Self::translate_li(operands),
             "mv" => Self::translate_mv(operands),
@@ -163,6 +163,35 @@ impl PseudoInstructions {
                 operands: vec![
                     rd.to_string(),
                     format!("{}({})", label, rd)
+                ]
+            }
+        ])
+    }
+
+    // Store global
+    // s{b|h|w|d} rd, symbol, rt => auipc + l{b|h|w|d}
+    fn translate_store_global<'a>(
+        instr: &'a str,
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands(instr, operands, 3)?;
+        let rd = operands[0];
+        let symbol = operands[1];
+        let rt = operands[2];
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    rt.to_string(),
+                    symbol.to_string()
+                ]
+            },
+            TranslatedInstruction {
+                mnemonic: instr,  // sb/sh/sw/sd
+                operands: vec![
+                    rd.to_string(),
+                    format!("{}({})", symbol, rt)
                 ]
             }
         ])
