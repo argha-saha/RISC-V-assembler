@@ -4,6 +4,14 @@ use std::collections::HashMap;
 use crate::assembler::error::AssemblerError;
 use crate::assembler::instructions::{InstructionFormat, InstructionSet, InstructionType};
 use crate::assembler::encoder::*;
+use crate::assembler::pseudo_instructions::PseudoInstructions;
+
+static NO_OPERAND_INSTRUCTIONS: phf::Set<&'static str> = phf::phf_set! {
+    "nop",
+    "ret",
+    "ecall",
+    "ebreak"
+};
 
 pub struct Parser {
     instructions: InstructionSet
@@ -21,12 +29,12 @@ impl Parser {
         mut line: &str,
         current_address: u32,
         symbols: &HashMap<String, u32>
-    ) -> Result<Option<u32>, AssemblerError> {
+    ) -> Result<Vec<u32>, AssemblerError> {
         // Skip comments or extract the code before a comment
         line = line.split('#').next().unwrap().trim();
 
         if line.is_empty() {
-            return Ok(None);
+            return Ok(vec![]);
         }
 
         // Label detection
@@ -35,7 +43,7 @@ impl Parser {
 
             if after_label.is_empty() {
                 // No instruction after label
-                return Ok(None);
+                return Ok(vec![]);
             }
 
             line = after_label;
@@ -50,21 +58,61 @@ impl Parser {
         let mnemonic = parts[0];
         let operands = &parts[1..];
 
-        if operands.is_empty() {
+        // Throw an error if operands are empty unless the instruction is nop or ret
+        if operands.is_empty() && !NO_OPERAND_INSTRUCTIONS.contains(mnemonic) {
             return Err(AssemblerError::ParseError("Missing operands".into()));
         }
 
+        // Check for a pseudo-instruction first
+        if PseudoInstructions::is_pseudo_instruction(mnemonic, operands.len()) {
+            let translated = PseudoInstructions::expand(mnemonic, operands)?;
+            
+            // Handle multiple expanded instructions
+            let mut result = Vec::with_capacity(translated.len());
+            
+            // Loop through each item in translated vec
+            for (idx, instr) in translated.iter().enumerate() {
+                let instr_operands: Vec<&str> = instr
+                    .operands
+                    .iter()
+                    .map(|s| s.as_str()).collect();
+
+                if let Some(instr_format) = self.instructions.get_instruction(instr.mnemonic) {
+                    // Calculate the address offset for each instruction in the expansion
+                    let instr_address = current_address + (idx as u32 * 4);
+                    
+                    let parsed = match instr_format.fmt {
+                        InstructionType::R => self.parse_r_type(instr_format, &instr_operands)?,
+                        InstructionType::I => self.parse_i_type(instr_format, &instr_operands)?,
+                        InstructionType::S => self.parse_s_type(instr_format, &instr_operands)?,
+                        InstructionType::B => self.parse_b_type(instr_format, &instr_operands, instr_address, symbols)?,
+                        InstructionType::U => self.parse_u_type(instr_format, &instr_operands, symbols)?,
+                        InstructionType::J => self.parse_j_type(instr_format, &instr_operands, instr_address, symbols)?,
+                    };
+                    
+                    result.push(parsed);
+                } else {
+                    return Err(AssemblerError::InvalidInstruction(instr.mnemonic.to_string()));
+                }
+            }
+            
+            return Ok(result);
+        }
+
+        // Handle base instructions
         let instr = self.instructions.get_instruction(mnemonic)
             .ok_or_else(|| AssemblerError::InvalidInstruction(mnemonic.to_string()))?.clone();
 
-        match instr.fmt {
-            InstructionType::R => Ok(Some(self.parse_r_type(&instr, operands)?)),
-            InstructionType::I => Ok(Some(self.parse_i_type(&instr, operands)?)),
-            InstructionType::S => Ok(Some(self.parse_s_type(&instr, operands)?)),
-            InstructionType::B => Ok(Some(self.parse_b_type(&instr, operands, current_address, symbols)?)),
-            InstructionType::U => Ok(Some(self.parse_u_type(&instr, operands, symbols)?)),
-            InstructionType::J => Ok(Some(self.parse_j_type(&instr, operands, current_address, symbols)?))
-        }
+        let parsed = match instr.fmt {
+            InstructionType::R => self.parse_r_type(&instr, operands)?,
+            InstructionType::I => self.parse_i_type(&instr, operands)?,
+            InstructionType::S => self.parse_s_type(&instr, operands)?,
+            InstructionType::B => self.parse_b_type(&instr, operands, current_address, symbols)?,
+            InstructionType::U => self.parse_u_type(&instr, operands, symbols)?,
+            InstructionType::J => self.parse_j_type(&instr, operands, current_address, symbols)?,
+        };
+        
+        Ok(vec![parsed])
     }
 
     // Parse R-type instructions
@@ -99,6 +147,16 @@ impl Parser {
         fmt: &InstructionFormat,
         operands: &[&str],
     ) -> Result<u32, AssemblerError> {
+        if fmt.opcode == 0b1110011 {
+            return if fmt.funct7 == Some(0x0) {
+                // ecall
+                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x0))
+            } else {
+                // ebreak
+                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x1))
+            }
+        }
+
         let (rd, rs1, imm) = match operands.len() {
             // I-type load instructions
             2 => {

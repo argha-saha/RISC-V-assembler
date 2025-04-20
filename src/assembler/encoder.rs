@@ -48,8 +48,10 @@ pub fn encode_b_type(opcode: u32, funct3: u32, rs1: u32, rs2: u32, imm: i32) -> 
 // U-type Instruction Format
 // imm[31:12] | rd | opcode
 pub fn encode_u_type(opcode: u32, rd: u32, imm: i32) -> u32 {
-    let imm = (imm as u32) & 0xFFFFF000;
-    imm | (rd << 7) | opcode
+    let imm20 = ((imm >> 12) as u32) & 0xFFFFF;   // 20 bits
+    let imm = imm20 << 12;                        // move to bits 31:12
+    let rd  = rd << 7;
+    imm | rd | opcode
 }
 
 // J-type Instruction Format

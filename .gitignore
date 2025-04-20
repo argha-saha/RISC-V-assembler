@@ -1,1 +1,9 @@
 /target
+test_asm_files/base/*.bin
+test_asm_files/base/*.hex
+test_asm_files/programs/*.bin
+test_asm_files/programs/*.hex
+test_asm_files/pseudo_instructions/*.bin
+test_asm_files/pseudo_instructions/*.hex
+test_asm_files/rv32m/*.bin
+test_asm_files/rv32m/*.hex

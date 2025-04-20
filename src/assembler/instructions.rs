@@ -31,10 +31,26 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000000)
     },
 
+    // ADD Word (RV64I)
+    "addw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
+        funct3: Some(0b000),
+        funct7: Some(0b0000000)
+    },
+
     // SUB
     "sub" => InstructionFormat {
         fmt: InstructionType::R,
         opcode: 0b0110011,
+        funct3: Some(0b000),
+        funct7: Some(0b0100000)
+    },
+
+    // SUB Word (RV64I)
+    "subw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
         funct3: Some(0b000),
         funct7: Some(0b0100000)
     },
@@ -71,6 +87,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000000)
     },
 
+    // Shift Left Logical Word (RV64I)
+    "sllw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
+        funct3: Some(0b001),
+        funct7: Some(0b0000000)
+    },
+
     // Shift Right Logical
     "srl" => InstructionFormat {
         fmt: InstructionType::R,
@@ -79,10 +103,26 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000000)
     },
 
+    // Shift Right Logical Word (RV64I)
+    "srlw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
+        funct3: Some(0b101),
+        funct7: Some(0b0000000)
+    },
+
     // Shift Right Arithmetic
     "sra" => InstructionFormat {
         fmt: InstructionType::R,
         opcode: 0b0110011,
+        funct3: Some(0b101),
+        funct7: Some(0b0100000)
+    },
+
+    // Shift Right Arithmetic Word (RV64I)
+    "sraw" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0111011,
         funct3: Some(0b101),
         funct7: Some(0b0100000)
     },
@@ -109,6 +149,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
     "addi" => InstructionFormat {
         fmt: InstructionType::I,
         opcode: 0b0010011,
+        funct3: Some(0b000),
+        funct7: None
+    },
+
+    // ADD Immediate Word (RV64I)
+    "addiw" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0011011,
         funct3: Some(0b000),
         funct7: None
     },
@@ -145,6 +193,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000000)
     },
 
+    // Shift Left Logical Immediate Word (RV64I)
+    "slliw" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0011011,
+        funct3: Some(0b001),
+        funct7: Some(0b0000000)
+    },
+
     // Shift Right Logical Immediate
     "srli" => InstructionFormat {
         fmt: InstructionType::I,
@@ -153,8 +209,24 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000000)
     },
 
+    // Shift Right Logical Immediate Word (RV64I)
+    "srliw" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0011011,
+        funct3: Some(0b101),
+        funct7: Some(0b0000000)
+    },
+
     // Shift Right Arithmetic Immediate
     "srai" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0010011,
+        funct3: Some(0b101),
+        funct7: Some(0b0100000)
+    },
+
+    // Shift Right Arithmetic Immediate Word (RV64I)
+    "sraiw" => InstructionFormat {
         fmt: InstructionType::I,
         opcode: 0b0010011,
         funct3: Some(0b101),
@@ -203,6 +275,22 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: None
     },
 
+    // Load Word Unsigned (RV64I)
+    "lwu" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0000011,
+        funct3: Some(0b110),
+        funct7: None
+    },
+
+    // Load Doubleword (RV64I)
+    "ld" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b0000011,
+        funct3: Some(0b011),
+        funct7: None
+    },
+
     // Load Byte Unsigned
     "lbu" => InstructionFormat {
         fmt: InstructionType::I,
@@ -242,6 +330,14 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         fmt: InstructionType::S,
         opcode: 0b0100011,
         funct3: Some(0b010),
+        funct7: None
+    },
+
+    // Store Doubleword (RV64I)
+    "sd" => InstructionFormat {
+        fmt: InstructionType::S,
+        opcode: 0b0100011,
+        funct3: Some(0b011),
         funct7: None
     },
 
@@ -348,6 +444,72 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct3: Some(0b000),
         funct7: Some(0b0000001)
     },
+
+    /* RV32M Multiply Extension */
+
+    // MUL
+    "mul" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b000),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High
+    "mulh" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b001),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High (S) (U)
+    "mulsu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b010),
+        funct7: Some(0b0000001)
+    },
+
+    // MUL High (U)
+    "mulu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b011),
+        funct7: Some(0b0000001)
+    },
+
+    // DIV
+    "div" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b100),
+        funct7: Some(0b0000001)
+    },
+
+    // DIV (U)
+    "divu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b101),
+        funct7: Some(0b0000001)
+    },
+
+    // Remainder
+    "rem" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b110),
+        funct7: Some(0b0000001)
+    },
+
+    // Remainder (U)
+    "remu" => InstructionFormat {
+        fmt: InstructionType::R,
+        opcode: 0b0110011,
+        funct3: Some(0b111),
+        funct7: Some(0b0000001)
+    }
 };
 
 pub struct InstructionSet;

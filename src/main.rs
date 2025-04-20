@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{env, fs, time::Instant};
 use std::error::Error;
 use std::path::Path;
 use std::process::exit;
@@ -20,6 +20,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let bin_out_path = asm_file_path.with_extension("bin");
     let hex_out_path = asm_file_path.with_extension("hex");
 
+    // let assemble_time = Instant::now();
+
     // Assemble the file and generate the hexdump
     let mut assembler = Assembler::new();
     let bin_out = assembler.assemble(asm_file)?;
@@ -28,6 +30,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Write the output files
     fs::write(&bin_out_path, &bin_out)?;
     fs::write(&hex_out_path, &hex_out)?;
+
+    // println!("Assembled in {:?}", assemble_time.elapsed());
 
     // Determine the output directory for printing and set a fallback
     let output_dir = bin_out_path.parent().unwrap_or(Path::new("."));
