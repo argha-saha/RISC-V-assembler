@@ -8,7 +8,9 @@ use crate::assembler::pseudo_instructions::PseudoInstructions;
 
 static NO_OPERAND_INSTRUCTIONS: phf::Set<&'static str> = phf::phf_set! {
     "nop",
-    "ret"
+    "ret",
+    "ecall",
+    "ebreak"
 };
 
 pub struct Parser {
@@ -62,7 +64,7 @@ impl Parser {
         }
 
         // Check for a pseudo-instruction first
-        if PseudoInstructions::is_pseudo_instruction(mnemonic) {
+        if PseudoInstructions::is_pseudo_instruction(mnemonic, operands.len()) {
             let translated = PseudoInstructions::expand(mnemonic, operands)?;
             
             // Handle multiple expanded instructions
@@ -145,6 +147,16 @@ impl Parser {
         fmt: &InstructionFormat,
         operands: &[&str],
     ) -> Result<u32, AssemblerError> {
+        if fmt.opcode == 0b1110011 {
+            return if fmt.funct7 == Some(0x0) {
+                // ecall
+                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x0))
+            } else {
+                // ebreak
+                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x1))
+            }
+        }
+
         let (rd, rs1, imm) = match operands.len() {
             // I-type load instructions
             2 => {

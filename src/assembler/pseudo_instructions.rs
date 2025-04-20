@@ -53,8 +53,12 @@ pub struct PseudoInstructions;
 
 impl PseudoInstructions {
     // Check if a mnemonic is a pseudo-instruction
-    pub fn is_pseudo_instruction(mnemonic: &str) -> bool {
+    pub fn is_pseudo_instruction(mnemonic: &str, operands_length: usize) -> bool {
         if PSEUDO_INSTRUCTIONS.contains(mnemonic) {
+            if (mnemonic == "jal" || mnemonic == "jalr") && operands_length != 1 {
+                return false;
+            }
+
             true
         } else {
             false
@@ -725,9 +729,9 @@ impl PseudoInstructions {
 
     // Call far-away subroutine
     // call offset => auipc + jalr
-    fn translate_call(
+    fn translate_call<'a>(
         operands: &[&str]
-    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         check_operands("call", operands, 1)?;
         let reg = "x1";
         let label = operands[0];
@@ -753,9 +757,9 @@ impl PseudoInstructions {
 
     // Tail call far-away subroutine
     // tail offset => auipc + jalr
-    fn translate_tail(
+    fn translate_tail<'a>(
         operands: &[&str]
-    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         check_operands("call", operands, 1)?;
         let reg = "x6";
         let label = operands[0];
