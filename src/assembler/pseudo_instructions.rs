@@ -33,7 +33,10 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "bgtu",
     "bleu",
     "j",
+    "jal",
     "jr",
+    "jalr",
+    "call",
     "ret"
 };
 
@@ -78,7 +81,10 @@ impl PseudoInstructions {
             "bgtu" => Self::translate_bgtu(operands),
             "bleu" => Self::translate_bleu(operands),
             "j" => Self::translate_j(operands),
+            "jal" => Self::translate_jal(operands),
             "jr" => Self::translate_jr(operands),
+            "jalr" => Self::translate_jalr(operands),
+            "call" => Self::translate_call(operands),
             "ret" => Self::translate_ret(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
@@ -623,9 +629,39 @@ impl PseudoInstructions {
         ])
     }
 
+    // Call far-away subroutine
+    // call offset => auipc + jalr
+    fn translate_call(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
+        check_operands("call", operands, 1)?;
+        let temp = "t1";
+        let label = operands[0];
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    temp.to_string(),
+                    label.to_string()
+                ]
+            },
+            TranslatedInstruction {
+                mnemonic: "jalr",
+                operands: vec![
+                    "x1".to_string(),
+                    temp.to_string(),
+                    label.to_string()
+                ]
+            }
+        ])
+    }
+
     // Return from subroutine
     // ret => jalr x0, x1, 0
-    fn translate_ret<'a>(operands: &[&str]) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+    fn translate_ret<'a>(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         check_operands("ret", operands, 0)?;
 
         Ok(vec![
