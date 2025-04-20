@@ -11,6 +11,14 @@ pub struct TranslatedInstruction<'a> {
 
 static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "la",
+    "lb",
+    "lh",
+    "lw",
+    "ld",
+    "sb",
+    "sh",
+    "sw",
+    "sd",
     "nop",
     "li",
     "mv",
@@ -60,6 +68,14 @@ impl PseudoInstructions {
     ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
         match mnemonic {
             "la" => Self::translate_la(operands),
+            "lb" => Self::translate_load_global(mnemonic, operands),
+            "lh" => Self::translate_load_global(mnemonic, operands),
+            "lw" => Self::translate_load_global(mnemonic, operands),
+            "ld" => Self::translate_load_global(mnemonic, operands),
+            // "sb",
+            // "sh",
+            // "sw",
+            // "sd",
             "nop" => Self::translate_nop(operands),
             "li" => Self::translate_li(operands),
             "mv" => Self::translate_mv(operands),
@@ -119,6 +135,34 @@ impl PseudoInstructions {
                     rd.to_string(),
                     rd.to_string(),
                     symbol.to_string()
+                ]
+            }
+        ])
+    }
+
+    // Load global
+    // l{b|h|w|d} rd, symbol => auipc + l{b|h|w|d}
+    fn translate_load_global<'a>(
+        instr: &'a str,
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction<'a>>, AssemblerError> {
+        check_operands(instr, operands, 2)?;
+        let rd = operands[0];
+        let label = operands[1];
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    rd.to_string(),
+                    label.to_string()
+                ]
+            },
+            TranslatedInstruction {
+                mnemonic: instr,  // lb/lh/lw/ld
+                operands: vec![
+                    rd.to_string(),
+                    format!("{}({})", label, rd)
                 ]
             }
         ])
