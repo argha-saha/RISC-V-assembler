@@ -36,8 +36,9 @@ static PSEUDO_INSTRUCTIONS: phf::Set<&'static str> = phf_set! {
     "jal",
     "jr",
     "jalr",
+    "ret",
     "call",
-    "ret"
+    "tail"
 };
 
 pub struct PseudoInstructions;
@@ -84,8 +85,9 @@ impl PseudoInstructions {
             "jal" => Self::translate_jal(operands),
             "jr" => Self::translate_jr(operands),
             "jalr" => Self::translate_jalr(operands),
-            "call" => Self::translate_call(operands),
             "ret" => Self::translate_ret(operands),
+            "call" => Self::translate_call(operands),
+            "tail" => Self::translate_tail(operands),
             _ => Err(AssemblerError::InvalidInstruction(format!(
                 "Unknown pseudo-instruction: {}", mnemonic
             )))
@@ -629,34 +631,6 @@ impl PseudoInstructions {
         ])
     }
 
-    // Call far-away subroutine
-    // call offset => auipc + jalr
-    fn translate_call(
-        operands: &[&str]
-    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
-        check_operands("call", operands, 1)?;
-        let temp = "t1";
-        let label = operands[0];
-
-        Ok(vec![
-            TranslatedInstruction {
-                mnemonic: "auipc",
-                operands: vec![
-                    temp.to_string(),
-                    label.to_string()
-                ]
-            },
-            TranslatedInstruction {
-                mnemonic: "jalr",
-                operands: vec![
-                    "x1".to_string(),
-                    temp.to_string(),
-                    label.to_string()
-                ]
-            }
-        ])
-    }
-
     // Return from subroutine
     // ret => jalr x0, x1, 0
     fn translate_ret<'a>(
@@ -671,6 +645,62 @@ impl PseudoInstructions {
                     "x0".to_string(),  // x0
                     "x1".to_string(),  // x1
                     "0".to_string()    // 0
+                ]
+            }
+        ])
+    }
+
+    // Call far-away subroutine
+    // call offset => auipc + jalr
+    fn translate_call(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
+        check_operands("call", operands, 1)?;
+        let reg = "x1";
+        let label = operands[0];
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    reg.to_string(),
+                    label.to_string()
+                ]
+            },
+            TranslatedInstruction {
+                mnemonic: "jalr",
+                operands: vec![
+                    reg.to_string(),
+                    reg.to_string(),
+                    label.to_string()
+                ]
+            }
+        ])
+    }
+
+    // Tail call far-away subroutine
+    // tail offset => auipc + jalr
+    fn translate_tail(
+        operands: &[&str]
+    ) -> Result<Vec<TranslatedInstruction>, AssemblerError> {
+        check_operands("call", operands, 1)?;
+        let reg = "x6";
+        let label = operands[0];
+
+        Ok(vec![
+            TranslatedInstruction {
+                mnemonic: "auipc",
+                operands: vec![
+                    reg.to_string(),
+                    label.to_string()
+                ]
+            },
+            TranslatedInstruction {
+                mnemonic: "jalr",
+                operands: vec![
+                    "x0".to_string(),
+                    reg.to_string(),
+                    label.to_string()
                 ]
             }
         ])
