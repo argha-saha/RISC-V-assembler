@@ -148,12 +148,24 @@ impl Parser {
         operands: &[&str],
     ) -> Result<u32, AssemblerError> {
         if fmt.opcode == 0b1110011 {
-            return if fmt.funct7 == Some(0x0) {
+            if fmt.funct7 == Some(0x0) {
                 // ecall
-                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x0))
-            } else {
+                return Ok(encode_i_type(
+                    fmt.opcode,
+                    0,
+                    fmt.funct3.unwrap_or(0),
+                    0,
+                    0x0
+                ));
+            } else if fmt.funct7 == Some(0x1) {
                 // ebreak
-                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x1))
+                return Ok(encode_i_type(
+                    fmt.opcode,
+                    0,
+                    fmt.funct3.unwrap_or(0),
+                    0,
+                    0x1
+                ));
             }
         }
 

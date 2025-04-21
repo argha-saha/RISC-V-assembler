@@ -445,6 +445,50 @@ static INSTRUCTIONS: phf::Map<&'static str, InstructionFormat> = phf_map! {
         funct7: Some(0b0000001)
     },
 
+    /* Zicsr Extension */
+
+    "csrrw" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b001),
+        funct7: None
+    },
+
+    "csrrs" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b010),
+        funct7: None
+    },
+
+    "csrrc" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b011),
+        funct7: None
+    },
+
+    "csrrwi" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b101),
+        funct7: None
+    },
+
+    "csrrsi" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b110),
+        funct7: None
+    },
+
+    "csrrci" => InstructionFormat {
+        fmt: InstructionType::I,
+        opcode: 0b1110011,
+        funct3: Some(0b111),
+        funct7: None
+    },
+
     /* RV32M Multiply Extension */
 
     // MUL

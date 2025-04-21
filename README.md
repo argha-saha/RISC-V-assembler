@@ -9,7 +9,7 @@ An assembler for the RISC-V instruction set, written in Rust.
 - Generates a hexdump file (`.hex`)
 
 ## Instruction Support
-- RV32I: all r-type, i-type, s-type, b-type, u-type, and j-type (excludes atomics, csr*, fence, wfi, u/s/m ret)
+- RV32I: all r-type, i-type, s-type, b-type, u-type, and j-type (excludes atomics, fence, wfi, u/s/m ret)
 - RV64I: addw, subw, sllw, srlw, sraw, addiw, slliw, srliw, sraiw, lwu, ld, sd
 - Pseudo-instructions: la, lb, lh, lw, ld, sb, sh, sw, sd, nop, li, mv, not, neg, negw, sext.w, seqz, snez, sltz, sgtz, 
 beqz, bnez, bltz, bgtz, bgt, ble, bgtu, bleu, j, jal, jr, jalr, ret, call, tail
