@@ -1,6 +1,8 @@
 /target
 test_asm_files/base/*.bin
 test_asm_files/base/*.hex
+test_asm_files/csr/*.bin
+test_asm_files/csr/*.hex
 test_asm_files/programs/*.bin
 test_asm_files/programs/*.hex
 test_asm_files/pseudo_instructions/*.bin
