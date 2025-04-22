@@ -1,6 +1,6 @@
 use phf::phf_map;
 
-pub static CSR_ADDRESSES: phf::Map<&'static str, u32> = phf_map! {
+pub(crate) const CSR_ADDRESSES: phf::Map<&'static str, u32> = phf_map! {
     "mstatus" => 0x300,
     "misa" => 0x301,
     "mie" => 0x304,
