@@ -1,10 +1,12 @@
 //! Parses RISC-V instructions into 32-bit machine code
 
 use std::collections::HashMap;
+use crate::assembler::csr::CSR_ADDRESSES;
+use crate::assembler::encoder::*;
 use crate::assembler::error::AssemblerError;
 use crate::assembler::instructions::{InstructionFormat, InstructionSet, InstructionType};
-use crate::assembler::encoder::*;
 use crate::assembler::pseudo_instructions::PseudoInstructions;
+use crate::assembler::registers::ABI_NAME_REGISTERS;
 
 static NO_OPERAND_INSTRUCTIONS: phf::Set<&'static str> = phf::phf_set! {
     "nop",
@@ -148,12 +150,77 @@ impl Parser {
         operands: &[&str],
     ) -> Result<u32, AssemblerError> {
         if fmt.opcode == 0b1110011 {
-            return if fmt.funct7 == Some(0x0) {
+            if fmt.funct7 == Some(0x0) {
                 // ecall
-                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x0))
-            } else {
+                return Ok(encode_i_type(
+                    fmt.opcode,
+                    0,
+                    fmt.funct3.unwrap_or(0),
+                    0,
+                    0x0
+                ));
+            } else if fmt.funct7 == Some(0x1) {
                 // ebreak
-                Ok(encode_i_type(fmt.opcode, 0, fmt.funct3.unwrap_or(0), 0, 0x1))
+                return Ok(encode_i_type(
+                    fmt.opcode,
+                    0,
+                    fmt.funct3.unwrap_or(0),
+                    0,
+                    0x1
+                ));
+            }
+
+            // CSR instructions
+            if let Some(f3) = fmt.funct3 {
+                match f3 {
+                    0b001 | 0b010 | 0b011 | 0b101 | 0b110 | 0b111 => {
+                        if operands.len() != 3 {
+                            return Err(AssemblerError::ParseError(
+                                format!(
+                                    "Expected 3 operands but received {} for a CSR instruction",
+                                    operands.len()
+                                )
+                            ));
+                        }
+
+                        let rd = parse_register(operands[0])?;
+                        let csr = parse_csr(operands[1])?;
+
+                        // Out-of-range check for 12-bit CSR address
+                        if csr < 0 || csr > 0xFFF {
+                            return Err(AssemblerError::InvalidOperand(
+                                format!("CSR value is out of range: {}", operands[1])
+                            ));
+                        }
+
+                        let rs1_imm = if f3 & 0b100 == 0 {
+                            parse_register(operands[2])?
+                        } else {
+                            let imm = parse_immediate(operands[2])?;
+
+                            // Out-of-bounds check for 5-bit immediate
+                            if imm < 0 || imm > 31 {
+                                return Err(AssemblerError::InvalidOperand(
+                                    format!(
+                                        "Immediate must be between 0-31 for a CSR instruction but received {}",
+                                        operands[2]
+                                    )
+                                ));
+                            }
+
+                            imm as u32
+                        };
+
+                        return Ok(encode_i_type(
+                            fmt.opcode,
+                            rd,
+                            f3,
+                            rs1_imm,
+                            csr
+                        ));
+                    }
+                    _ => {}
+                }
             }
         }
 
@@ -319,42 +386,6 @@ impl Parser {
     }
 }
 
-const ABI_NAME_REGISTERS: phf::Map<&'static str, u32> = phf::phf_map! {
-    "zero" => 0,  // Zero constant
-    "ra" => 1,    // Return address
-    "sp" => 2,    // Stack pointer
-    "gp" => 3,    // Global pointer
-    "tp" => 4,    // Thread pointer
-    "t0" => 5,    // Temporary
-    "t1" => 6,    // Temporary
-    "t2" => 7,    // Temporary
-    "fp" => 8,    // Frame pointer
-    "s0" => 8,    // Saved register
-    "s1" => 9,    // Saved register
-    "a0" => 10,   // Fn args/return values
-    "a1" => 11,   // Fn args
-    "a2" => 12,   // Fn args
-    "a3" => 13,   // Fn args
-    "a4" => 14,   // Fn args
-    "a5" => 15,   // Fn args
-    "a6" => 16,   // Fn args
-    "a7" => 17,   // Fn args
-    "s2" => 18,   // Saved register
-    "s3" => 19,   // Saved register
-    "s4" => 20,   // Saved register
-    "s5" => 21,   // Saved register
-    "s6" => 22,   // Saved register
-    "s7" => 23,   // Saved register
-    "s8" => 24,   // Saved register
-    "s9" => 25,   // Saved register
-    "s10" => 26,  // Saved register
-    "s11" => 27,  // Saved register
-    "t3" => 28,   // Temporary
-    "t4" => 29,   // Temporary
-    "t5" => 30,   // Temporary
-    "t6" => 31,   // Temporary
-};
-
 // Parse registers x0 to x31
 // ABI names should work as well (zero, ra, sp, gp, tp, t0-t6, s0-s11, a0-a7)
 pub fn parse_register(register: &str) -> Result<u32, AssemblerError> {
@@ -465,4 +496,18 @@ pub fn parse_offset(offset: &str) -> Result<(i32, u32), AssemblerError> {
     }
 
     Ok((imm, rs1))
+}
+
+pub fn parse_csr(imm: &str) -> Result<i32, AssemblerError> {
+    if let Ok(parsed) = parse_immediate(imm) {
+        return Ok(parsed);
+    }
+
+    if let Some(&addr) = CSR_ADDRESSES.get(imm) {
+        return Ok(addr as i32);
+    }
+
+    Err(AssemblerError::InvalidOperand(
+        format!("Invalid CSR name or immediate: {}", imm)
+    ))
 }

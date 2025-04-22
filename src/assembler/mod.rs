@@ -4,6 +4,8 @@ pub mod instructions;
 pub mod encoder;
 pub mod hexdump;
 pub mod pseudo_instructions;
+mod csr;
+mod registers;
 
 use std::collections::HashMap;
 use std::fs::File;
