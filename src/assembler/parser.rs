@@ -478,3 +478,17 @@ pub fn parse_offset(offset: &str) -> Result<(i32, u32), AssemblerError> {
 
     Ok((imm, rs1))
 }
+
+pub fn parse_csr(imm: &str) -> Result<i32, AssemblerError> {
+    if let Ok(parsed) = parse_immediate(imm) {
+        return Ok(parsed);
+    }
+
+    if let Some(&addr) = CSR_ADDRESSES.get(imm) {
+        return Ok(addr as i32);
+    }
+
+    Err(AssemblerError::InvalidOperand(
+        format!("Invalid CSR name or immediate: {}", imm)
+    ))
+}
