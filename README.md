@@ -20,6 +20,6 @@ beqz, bnez, bltz, bgtz, bgt, ble, bgtu, bleu, j, jal, jr, jalr, ret, call, tail
 - Implement RV32A atomic extension instructions
 
 ## References
+[RISC-V Technical Specifications](https://lf-riscv.atlassian.net/wiki/spaces/HOME/pages/16154769/RISC-V+Technical+Specifications#ISA-Specifications)  
 [RISC-V Reference](https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf)  
-[RISC-V ISA Pages](https://msyksphinz-self.github.io/riscv-isadoc/html/rv64i.html)  
-[Control and Status Registers](https://five-embeddev.com/riscv-priv-isa-manual/Priv-v1.12/priv-csrs.html)  
+[RISC-V ISA Pages](https://msyksphinz-self.github.io/riscv-isadoc/html/rv64i.html)
